@@ -1,0 +1,23 @@
+C2Go Toolchain — pre-release notice
+====================================
+
+STATUS: PRE-RELEASE. NO INSTALLABLE TOOLCHAIN IS PUBLISHED BY THIS CHECKOUT.
+
+This repository coordinates independently licensed C2Go components. A future
+submodule pin or release bundle does not replace the license, copyright,
+attribution, modification, source-availability, or other notices carried by
+each component and its dependencies.
+
+Original coordination documentation and scripts are available under GNU
+AGPL-3.0-only, with alternative commercial terms only through a separately
+executed agreement covering rights controlled by its named licensor.
+
+c2go-clang remains under Apache-2.0 WITH LLVM-exception. c2go-bind and
+c2go-libc have their own mixed licensing and provenance boundaries. musl, Go,
+PureGo, LLVM, Apple/FreeBSD/XNU/MinGW, user input, and other third-party
+materials retain their original applicable rights and notices.
+
+The C2Go names and logo are branding assets and are excluded from the software
+license grant. See TRADEMARKS.md. GitHub Sponsors may be used as a payment
+channel under a separately executed agreement; sponsorship alone is not a
+license grant.

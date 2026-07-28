@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "release": {
+    "version": null,
+    "status": "pre-release",
+    "published_at": null
+  },
+  "compatibility": {
+    "go": {
+      "minimum": "1.25.0",
+      "maximum_exclusive": "1.26.0"
+    },
+    "c2go_abi_epoch": {
+      "minimum": 1,
+      "maximum": 1
+    }
+  },
+  "components": [
+    {
+      "name": "c2go-clang",
+      "repository": "https://github.com/c2gohq/c2go-clang.git",
+      "path": "components/c2go-clang",
+      "revision": null,
+      "tag": null,
+      "license": "Apache-2.0 WITH LLVM-exception"
+    },
+    {
+      "name": "c2go-bind",
+      "repository": "https://github.com/c2gohq/c2go-bind.git",
+      "path": "components/c2go-bind",
+      "revision": null,
+      "tag": null,
+      "license": "AGPL-3.0-only OR separate commercial agreement, with identified third-party portions"
+    },
+    {
+      "name": "c2go-libc",
+      "repository": "https://github.com/c2gohq/c2go-libc.git",
+      "path": "components/c2go-libc",
+      "revision": null,
+      "tag": null,
+      "license": "Mixed: original C2Go, musl-derived, and other third-party material"
+    }
+  ],
+  "nested_dependencies": [
+    {
+      "name": "musl",
+      "repository": "https://github.com/c2gohq/musl.git",
+      "owner_component": "c2go-libc",
+      "relative_path": "musl",
+      "path": "components/c2go-libc/musl",
+      "revision": null,
+      "tag": null,
+      "license": "musl MIT terms and file-specific notices"
+    }
+  ]
+}
