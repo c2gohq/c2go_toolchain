@@ -18,25 +18,25 @@
   "components": [
     {
       "name": "c2go-clang",
-      "repository": "https://github.com/c2gohq/c2go-clang.git",
+      "repository": "https://github.com/c2gohq/c2go_clang.git",
       "path": "components/c2go-clang",
-      "revision": null,
+      "revision": "2fac6b37a32960ab27678264c6b324c7fe695f75",
       "tag": null,
       "license": "Apache-2.0 WITH LLVM-exception"
     },
     {
       "name": "c2go-bind",
-      "repository": "https://github.com/c2gohq/c2go-bind.git",
+      "repository": "https://github.com/c2gohq/c2go_bind.git",
       "path": "components/c2go-bind",
-      "revision": null,
+      "revision": "ddd68ae19655a2d64297f1e764e222673684514f",
       "tag": null,
       "license": "AGPL-3.0-only OR separate commercial agreement, with identified third-party portions"
     },
     {
       "name": "c2go-libc",
-      "repository": "https://github.com/c2gohq/c2go-libc.git",
+      "repository": "https://github.com/c2gohq/c2go_libc.git",
       "path": "components/c2go-libc",
-      "revision": null,
+      "revision": "de254143ba0ad9b115afdf7a10f9883964e172ba",
       "tag": null,
       "license": "Mixed: original C2Go, musl-derived, and other third-party material"
     }
@@ -48,7 +48,7 @@
       "owner_component": "c2go-libc",
       "relative_path": "musl",
       "path": "components/c2go-libc/musl",
-      "revision": null,
+      "revision": "a31facd31f63ac569a39f8796b7e5c1494892f1e",
       "tag": null,
       "license": "musl MIT terms and file-specific notices"
     }

@@ -9,9 +9,9 @@ or a passing component-only test is not release evidence.
 
 Create and populate these controlled repositories first:
 
-- `https://github.com/c2gohq/c2go-clang.git`
-- `https://github.com/c2gohq/c2go-bind.git`
-- `https://github.com/c2gohq/c2go-libc.git`
+- `https://github.com/c2gohq/c2go_clang.git`
+- `https://github.com/c2gohq/c2go_bind.git`
+- `https://github.com/c2gohq/c2go_libc.git`
 - `https://github.com/c2gohq/musl.git`
 
 The c2go-clang fork must not use the upstream LLVM repository as its push
@@ -21,14 +21,12 @@ Before adding submodules, verify that every release commit is reachable from
 its public remote and that c2go-libc pins the intended musl commit as its own
 nested submodule.
 
-## 2. Activate the top-level submodules
+## 2. Initialize the top-level submodules
 
-Only after the remotes above exist:
+The submodules are already registered in `.gitmodules`. From a fresh checkout:
 
 ```sh
-git submodule add https://github.com/c2gohq/c2go-clang.git components/c2go-clang
-git submodule add https://github.com/c2gohq/c2go-bind.git components/c2go-bind
-git submodule add https://github.com/c2gohq/c2go-libc.git components/c2go-libc
+git submodule sync --recursive
 git submodule update --init --recursive
 ```
 

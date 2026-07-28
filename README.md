@@ -14,16 +14,16 @@
 
 > **PRE-RELEASE COORDINATION REPOSITORY — NOT READY FOR PRODUCTION USE**
 >
-> This repository records the intended component set and release process. The
-> component remotes and immutable submodule pointers have not been activated,
-> so no installable C2Go release is published from this checkout yet.
+> This repository pins current pre-release component snapshots as Git
+> submodules. No coordinated tag or installable C2Go release has been published
+> from this checkout yet.
 
 ## What this repository is
 
 `c2go-toolchain` is the canonical release-coordination repository for C2Go. It
-will pin one mutually compatible revision of each top-level component, record
-the supported Go and C2Go ABI window, run fail-closed release checks, and host
-the release notes and downloadable bundles for each coordinated release.
+pins candidate revisions of each top-level component, records the supported Go
+and C2Go ABI window, runs fail-closed release checks, and hosts the release notes
+and downloadable bundles for each coordinated release.
 
 It is intentionally not a monorepo. Component development and history remain
 in their own repositories; this repository becomes the source of truth for the
@@ -31,11 +31,11 @@ exact combination shipped under a C2Go toolchain version.
 
 ## Components
 
-| Component | Planned repository | Mount point | Responsibility | License boundary |
+| Component | Repository | Mount point | Responsibility | License boundary |
 | --- | --- | --- | --- | --- |
-| c2go-clang | `c2gohq/c2go-clang` | `components/c2go-clang` | LLVM/Clang-based C2Go frontend, lowering, `c2go-lto`, and Plan 9 assembly emission | `Apache-2.0 WITH LLVM-exception`, plus existing third-party notices |
-| c2go-bind | `c2gohq/c2go-bind` | `components/c2go-bind` | Converts C2Go assembly and manifests into Go packages | Original C2Go material: `AGPL-3.0-only` or a separate commercial agreement; third-party portions retain their licenses |
-| c2go-libc | `c2gohq/c2go-libc` | `components/c2go-libc` | Runtime C-library compatibility and Go runtime bridges | Mixed work: original C2Go material plus musl and other third-party material under their own terms |
+| c2go-clang | `c2gohq/c2go_clang` | `components/c2go-clang` | LLVM/Clang-based C2Go frontend, lowering, `c2go-lto`, and Plan 9 assembly emission | `Apache-2.0 WITH LLVM-exception`, plus existing third-party notices |
+| c2go-bind | `c2gohq/c2go_bind` | `components/c2go-bind` | Converts C2Go assembly and manifests into Go packages | Original C2Go material: `AGPL-3.0-only` or a separate commercial agreement; third-party portions retain their licenses |
+| c2go-libc | `c2gohq/c2go_libc` | `components/c2go-libc` | Runtime C-library compatibility and Go runtime bridges | Mixed work: original C2Go material plus musl and other third-party material under their own terms |
 
 The modified `c2gohq/musl` fork is a nested, commit-pinned dependency owned by
 the c2go-libc release. It is not a fourth top-level toolchain component.
@@ -62,11 +62,12 @@ Go executable or library
 
 The repository is deliberately fail-closed:
 
-- `.gitmodules` is not created until all three `c2gohq` component repositories
-  exist and the intended commits are reachable;
-- [toolchain.lock.json](toolchain.lock.json) uses `null` revisions and tags
-  until real immutable values can be recorded;
-- the default release verifier must fail while those values are unset; and
+- `.gitmodules` records the three public component remotes, and the gitlinks are
+  pinned to commits that are reachable from those remotes;
+- [toolchain.lock.json](toolchain.lock.json) records those exact revisions while
+  release tags and coordinated release metadata remain unset;
+- the default release verifier must fail while release metadata or tags are
+  unset; and
 - the provisional compatibility window is Go 1.25.x and C2Go ABI epoch 1,
   subject to clean-checkout release validation.
 
@@ -82,8 +83,8 @@ The actual release gate is intentionally stricter:
 python3 scripts/verify-release.py
 ```
 
-It will not pass until the component remotes, submodule gitlinks, tags,
-revisions, recursive dependencies, and clean working trees all agree.
+It will not pass until the release metadata, tags, component revisions,
+recursive dependencies, and clean working trees all agree.
 
 ## First release
 
@@ -93,16 +94,15 @@ the component-level provenance, generated-artifact, musl, `c2go_libc/dl`,
 clean-clone, and platform-test blockers documented in the component
 repositories.
 
-See [RELEASING.md](RELEASING.md) for the activation and release sequence. Do
-not publish `git clone --recursive` installation instructions until the
-submodules and the release gate are live.
+See [RELEASING.md](RELEASING.md) for the initialization and release sequence.
+Do not publish installation instructions until the release gate passes.
 
 ## Repository layout
 
 ```text
 .
 ├── assets/                 Project branding and provenance notes
-├── components/             Future pinned top-level submodules
+├── components/             Pinned top-level submodules
 ├── scripts/                Fail-closed release validation
 ├── toolchain.lock.json     Coordinated version and revision manifest
 ├── RELEASING.md            Release procedure

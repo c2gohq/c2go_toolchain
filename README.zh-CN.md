@@ -14,25 +14,25 @@
 
 > **预发布协调仓库——尚不能用于生产环境**
 >
-> 本仓库目前只记录计划中的组件集合和发布流程。组件远端与不可变 submodule
-> 指针尚未启用，因此这个 checkout 还没有发布可安装的 C2Go 版本。
+> 本仓库已通过 Git submodule 固定当前预发布组件快照，但尚未发布协同 tag 或
+> 可安装的 C2Go 版本。
 
 ## 本仓库的职责
 
-`c2go-toolchain` 是 C2Go 的权威发布协调仓库。它将为每次 release 固定三个
-顶层组件的一组相互兼容 revision，记录支持的 Go 版本和 C2Go ABI 范围，执行
-默认拒绝发布的检查，并统一承载 release notes 与下载包。
+`c2go-toolchain` 是 C2Go 的权威发布协调仓库。它固定三个顶层组件的候选
+revision，记录支持的 Go 版本和 C2Go ABI 范围，执行默认拒绝发布的检查，并
+统一承载 release notes 与下载包。
 
 它不是 monorepo。各组件仍在自己的仓库中开发并保留独立历史；本仓库只对某个
 C2Go toolchain 版本实际包含的精确组合负责。
 
 ## 组件
 
-| 组件 | 计划仓库 | 挂载路径 | 职责 | 许可边界 |
+| 组件 | 仓库 | 挂载路径 | 职责 | 许可边界 |
 | --- | --- | --- | --- | --- |
-| c2go-clang | `c2gohq/c2go-clang` | `components/c2go-clang` | 基于 LLVM/Clang 的 C2Go 前端、lowering、`c2go-lto` 与 Plan 9 汇编输出 | `Apache-2.0 WITH LLVM-exception`，以及原有第三方声明 |
-| c2go-bind | `c2gohq/c2go-bind` | `components/c2go-bind` | 将 C2Go 汇编和 manifest 转换成 Go 包 | C2Go 原创材料为 `AGPL-3.0-only` 或另行商业协议；第三方部分保留原许可 |
-| c2go-libc | `c2gohq/c2go-libc` | `components/c2go-libc` | C 库运行时兼容层和 Go runtime bridge | 混合项目：C2Go 原创材料、musl 及其他第三方材料分别适用各自条款 |
+| c2go-clang | `c2gohq/c2go_clang` | `components/c2go-clang` | 基于 LLVM/Clang 的 C2Go 前端、lowering、`c2go-lto` 与 Plan 9 汇编输出 | `Apache-2.0 WITH LLVM-exception`，以及原有第三方声明 |
+| c2go-bind | `c2gohq/c2go_bind` | `components/c2go-bind` | 将 C2Go 汇编和 manifest 转换成 Go 包 | C2Go 原创材料为 `AGPL-3.0-only` 或另行商业协议；第三方部分保留原许可 |
+| c2go-libc | `c2gohq/c2go_libc` | `components/c2go-libc` | C 库运行时兼容层和 Go runtime bridge | 混合项目：C2Go 原创材料、musl 及其他第三方材料分别适用各自条款 |
 
 修改后的 `c2gohq/musl` fork 是由 c2go-libc release 管理并固定 commit 的嵌套
 依赖，不是第四个顶层 toolchain 组件。
@@ -59,11 +59,10 @@ Go 可执行文件或库
 
 本仓库有意采用 fail-closed 设计：
 
-- 三个 `c2gohq` 组件仓库全部存在且目标 commit 可访问之前，不创建
-  `.gitmodules`；
-- [toolchain.lock.json](toolchain.lock.json) 在获得真实不可变值之前使用
-  `null` revision 和 tag；
-- 这些值未填写时，正式 release 校验必须失败；
+- `.gitmodules` 已记录三个公开组件远端，gitlink 固定到各远端可达的 commit；
+- [toolchain.lock.json](toolchain.lock.json) 已记录这些精确 revision，而 release
+  tag 与协同发布元数据仍保持未设置；
+- release 元数据或 tag 未填写时，正式 release 校验必须失败；
 - 暂定兼容范围为 Go 1.25.x 和 C2Go ABI epoch 1，最终仍以 clean checkout
   的 release 验证为准。
 
@@ -79,8 +78,8 @@ python3 scripts/verify-release.py --structure-only
 python3 scripts/verify-release.py
 ```
 
-组件远端、submodule gitlink、tag、revision、递归依赖和干净工作树全部一致前，
-该命令不会通过。
+release 元数据、tag、组件 revision、递归依赖和干净工作树全部一致前，该命令
+不会通过。
 
 ## 第一个版本
 
@@ -88,8 +87,8 @@ python3 scripts/verify-release.py
 `v0.1.0`。打 tag 前，必须关闭各组件记录的来源审计、生成物、musl、
 `c2go_libc/dl`、clean clone 和平台测试阻断项。
 
-启用 submodule 和发布的完整顺序见 [RELEASING.zh-CN.md](RELEASING.zh-CN.md)。
-在 submodule 与 release gate 真正可用之前，不要发布 `git clone --recursive`
+初始化 submodule 和发布的完整顺序见
+[RELEASING.zh-CN.md](RELEASING.zh-CN.md)。release gate 通过之前，不要发布
 安装说明。
 
 ## 仓库结构
@@ -97,7 +96,7 @@ python3 scripts/verify-release.py
 ```text
 .
 ├── assets/                 品牌资源及来源说明
-├── components/             未来固定 revision 的顶层 submodule
+├── components/             固定 revision 的顶层 submodule
 ├── scripts/                fail-closed release 校验
 ├── toolchain.lock.json     协同版本和 revision 清单
 ├── RELEASING*.md           发布流程

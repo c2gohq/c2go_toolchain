@@ -1,14 +1,18 @@
 # Components
 
-This directory is intentionally empty in the pre-release scaffold.
-
-After the controlled `c2gohq` repositories exist, it will contain exactly
-three top-level Git submodules:
+This directory contains exactly three top-level Git submodules pinned by the
+toolchain repository:
 
 - `c2go-clang`
 - `c2go-bind`
 - `c2go-libc`
 
-Do not copy or symlink local working trees into this directory. Activate the
-submodules only with reachable remotes and reviewed immutable commits, following
+Their public remotes and exact revisions are recorded in `.gitmodules` and
+`toolchain.lock.json`. Initialize them with:
+
+```sh
+git submodule update --init --recursive
+```
+
+Do not replace them with copied or symlinked local working trees. See
 [../RELEASING.md](../RELEASING.md).

@@ -9,9 +9,9 @@
 
 首先创建并填充以下受控仓库：
 
-- `https://github.com/c2gohq/c2go-clang.git`
-- `https://github.com/c2gohq/c2go-bind.git`
-- `https://github.com/c2gohq/c2go-libc.git`
+- `https://github.com/c2gohq/c2go_clang.git`
+- `https://github.com/c2gohq/c2go_bind.git`
+- `https://github.com/c2gohq/c2go_libc.git`
 - `https://github.com/c2gohq/musl.git`
 
 c2go-clang fork 不得继续以上游 LLVM 仓库作为 push 目标；必须保留上游历史和
@@ -20,14 +20,12 @@ c2go-clang fork 不得继续以上游 LLVM 仓库作为 push 目标；必须保�
 添加 submodule 前，应确认每个 release commit 均可从公开远端访问，并确认
 c2go-libc 已把目标 musl commit 作为自己的嵌套 submodule 固定。
 
-## 2. 启用顶层 submodule
+## 2. 初始化顶层 submodule
 
-仅在上述远端真实存在后执行：
+这些 submodule 已登记在 `.gitmodules` 中。全新 checkout 应执行：
 
 ```sh
-git submodule add https://github.com/c2gohq/c2go-clang.git components/c2go-clang
-git submodule add https://github.com/c2gohq/c2go-bind.git components/c2go-bind
-git submodule add https://github.com/c2gohq/c2go-libc.git components/c2go-libc
+git submodule sync --recursive
 git submodule update --init --recursive
 ```
 

@@ -19,15 +19,15 @@ LOCK_PATH = ROOT / "toolchain.lock.json"
 
 EXPECTED_COMPONENTS = {
     "c2go-clang": (
-        "https://github.com/c2gohq/c2go-clang.git",
+        "https://github.com/c2gohq/c2go_clang.git",
         "components/c2go-clang",
     ),
     "c2go-bind": (
-        "https://github.com/c2gohq/c2go-bind.git",
+        "https://github.com/c2gohq/c2go_bind.git",
         "components/c2go-bind",
     ),
     "c2go-libc": (
-        "https://github.com/c2gohq/c2go-libc.git",
+        "https://github.com/c2gohq/c2go_libc.git",
         "components/c2go-libc",
     ),
 }

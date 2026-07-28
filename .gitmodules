@@ -1,0 +1,10 @@
+[submodule "components/c2go-clang"]
+	path = components/c2go-clang
+	url = https://github.com/c2gohq/c2go_clang.git
+	shallow = true
+[submodule "components/c2go-bind"]
+	path = components/c2go-bind
+	url = https://github.com/c2gohq/c2go_bind.git
+[submodule "components/c2go-libc"]
+	path = components/c2go-libc
+	url = https://github.com/c2gohq/c2go_libc.git
