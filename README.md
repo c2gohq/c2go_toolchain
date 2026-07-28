@@ -86,6 +86,20 @@ python3 scripts/verify-release.py
 It will not pass until the release metadata, tags, component revisions,
 recursive dependencies, and clean working trees all agree.
 
+The release workflow also supports a manually dispatched unsigned dry run. It
+builds and tests on native GitHub-hosted runners, then packages:
+
+- Linux amd64 and arm64 (`.tar.gz`);
+- Windows amd64 (`.zip`);
+- macOS arm64 (`.tar.gz`);
+- one recursively complete source archive; and
+- per-file SHA-256 sidecars plus a combined `SHA256SUMS`.
+
+A coordinated `v*` tag creates a GitHub Release **draft**. The draft remains a
+manual legal, notice, checksum, and installation smoke-test checkpoint; the
+workflow never overwrites an existing release and does not currently sign or
+notarize artifacts.
+
 ## First release
 
 The first public build should be a release candidate such as
@@ -103,7 +117,8 @@ Do not publish installation instructions until the release gate passes.
 .
 ├── assets/                 Project branding and provenance notes
 ├── components/             Pinned top-level submodules
-├── scripts/                Fail-closed release validation
+├── .github/workflows/      Native multi-platform release build
+├── scripts/                Release validation and deterministic packaging
 ├── toolchain.lock.json     Coordinated version and revision manifest
 ├── RELEASING.md            Release procedure
 ├── LICENSING*.md           Aggregate and component license boundaries

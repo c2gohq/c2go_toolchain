@@ -66,6 +66,10 @@ python3 scripts/verify-release.py
 
 然后运行各组件记录的构建/测试矩阵，并保存机器可读日志作为 release 证据。
 
+推送经过复核的 commit 后、创建 tag 前，使用候选版本手动运行
+`Release C2Go toolchain` workflow。该步骤是 unsigned dry run：它会执行与
+正式发布相同的四个原生构建任务和完整源码打包，但不会创建 GitHub Release。
+
 ## 6. 构建发布产物
 
 本仓库的普通 Git archive 不包含 submodule 内容。必须生成完整源码包：其中包含
@@ -80,10 +84,17 @@ python3 scripts/verify-release.py
 - 可复现构建说明及 bootstrap 工具；
 - 条件允许时提供 SBOM/来源数据。
 
+当前 workflow 对两个 Linux 架构使用 Ubuntu 22.04，对 Windows amd64 使用
+Windows Server 2022，对 macOS arm64 使用 macOS 14，并设置
+`CMAKE_OSX_DEPLOYMENT_TARGET=11.0`。它会生成未签名的确定性压缩包、递归完整
+源码包、checksum sidecar 和 `SHA256SUMS`。在取得相应凭据并确定策略前，不会
+配置签名、Apple notarization 或 Windows Authenticode。
+
 ## 7. Tag 与发布
 
 先为经过复核的组件 commit 打 tag，再为 gitlink 和 lock 文件精确引用这些 commit
-的 c2go-toolchain commit 打 tag。创建 GitHub Release 草稿，上传已验证产物，
-人工检查声明与 checksum 后再正式发布。
+的 c2go-toolchain commit 打 tag。推送该 tag 后，workflow 会使用仓库自动提供的
+`GITHUB_TOKEN` 构建产物并创建 GitHub Release 草稿，无需 personal access token。
+人工检查产物、声明、checksum 和安装 smoke test 后，再发布该草稿。
 
 不得移动或替换已经发布的 tag；修正应使用新的候选版或补丁版本。

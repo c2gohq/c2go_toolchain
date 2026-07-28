@@ -1,0 +1,353 @@
+name: Release C2Go toolchain
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version used for an unsigned dry-run package build
+        required: true
+        default: v0.1.0-rc.1
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c2go-toolchain-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    name: Validate release inputs
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      prerelease: ${{ steps.release.outputs.prerelease }}
+      source_date_epoch: ${{ steps.release.outputs.source_date_epoch }}
+    steps:
+      - name: Check out the pinned toolchain
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Resolve release context
+        id: release
+        shell: bash
+        env:
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME}"
+          else
+            version="${DISPATCH_VERSION}"
+          fi
+          if [[ ! "${version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            printf 'invalid release version: %s\n' "${version}" >&2
+            exit 1
+          fi
+          prerelease=false
+          if [[ "${version}" == *-rc.* ]]; then
+            prerelease=true
+          fi
+          printf 'version=%s\n' "${version}" >>"${GITHUB_OUTPUT}"
+          printf 'prerelease=%s\n' "${prerelease}" >>"${GITHUB_OUTPUT}"
+          printf 'source_date_epoch=%s\n' "$(git show -s --format=%ct HEAD)" >>"${GITHUB_OUTPUT}"
+
+      - name: Validate the pinned snapshot
+        if: github.ref_type != 'tag'
+        run: python3 scripts/verify-release.py --snapshot
+
+      - name: Validate immutable release metadata and remote tags
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          locked_version="$(python3 -c 'import json; print(json.load(open("toolchain.lock.json"))["release"]["version"])')"
+          if [[ "${locked_version}" != "${VERSION}" ]]; then
+            printf 'toolchain tag %s does not match lock version %s\n' "${VERSION}" "${locked_version}" >&2
+            exit 1
+          fi
+          python3 scripts/verify-release.py
+
+  build:
+    name: Build ${{ matrix.target }}
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-amd64
+            runner: ubuntu-22.04
+          - target: linux-arm64
+            runner: ubuntu-22.04-arm
+          - target: windows-amd64
+            runner: windows-2022
+          - target: macos-arm64
+            runner: macos-14
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 360
+    steps:
+      - name: Check out the pinned toolchain
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up Go
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: 1.25.9
+          cache: false
+
+      - name: Show builder versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          cmake --version
+          go version
+          python3 --version
+          if [[ "${RUNNER_OS}" != "Windows" ]]; then
+            ninja --version
+          fi
+
+      - name: Configure C2Go Clang on Linux or macOS
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            -S components/c2go-clang/llvm
+            -B build/c2go-clang
+            -G Ninja
+            -DCMAKE_BUILD_TYPE=Release
+            -DLLVM_ENABLE_PROJECTS=clang
+            "-DLLVM_TARGETS_TO_BUILD=X86;AArch64"
+            -DLLVM_ENABLE_ASSERTIONS=OFF
+            -DLLVM_INCLUDE_TESTS=OFF
+            -DCLANG_INCLUDE_TESTS=OFF
+            -DLLVM_INCLUDE_EXAMPLES=OFF
+            -DLLVM_INCLUDE_BENCHMARKS=OFF
+            -DLLVM_INCLUDE_DOCS=OFF
+            -DLLVM_ENABLE_BINDINGS=OFF
+            -DLLVM_ENABLE_LIBXML2=OFF
+            -DLLVM_ENABLE_ZLIB=OFF
+            -DLLVM_ENABLE_ZSTD=OFF
+            -DLLVM_ENABLE_CURL=OFF
+            -DLLVM_ENABLE_HTTPLIB=OFF
+            -DCLANG_ENABLE_OBJC_REWRITER=OFF
+            -DCLANG_ENABLE_STATIC_ANALYZER=OFF
+            -DLLVM_PARALLEL_LINK_JOBS=1
+          )
+          if [[ "${RUNNER_OS}" == "macOS" ]]; then
+            args+=( -DCMAKE_OSX_DEPLOYMENT_TARGET=11.0 )
+          fi
+          cmake "${args[@]}"
+
+      - name: Build C2Go Clang on Linux or macOS
+        if: runner.os != 'Windows'
+        run: cmake --build build/c2go-clang --target c2go-toolchain --parallel 4
+
+      - name: Configure C2Go Clang on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cmake -S components/c2go-clang/llvm -B build/c2go-clang `
+            -G "Visual Studio 17 2022" -A x64 -Thost=x64 `
+            -DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded `
+            -DLLVM_ENABLE_PROJECTS=clang `
+            "-DLLVM_TARGETS_TO_BUILD=X86;AArch64" `
+            -DLLVM_ENABLE_ASSERTIONS=OFF `
+            -DLLVM_INCLUDE_TESTS=OFF `
+            -DCLANG_INCLUDE_TESTS=OFF `
+            -DLLVM_INCLUDE_EXAMPLES=OFF `
+            -DLLVM_INCLUDE_BENCHMARKS=OFF `
+            -DLLVM_INCLUDE_DOCS=OFF `
+            -DLLVM_ENABLE_BINDINGS=OFF `
+            -DLLVM_ENABLE_LIBXML2=OFF `
+            -DLLVM_ENABLE_ZLIB=OFF `
+            -DLLVM_ENABLE_ZSTD=OFF `
+            -DLLVM_ENABLE_CURL=OFF `
+            -DLLVM_ENABLE_HTTPLIB=OFF `
+            -DLLVM_ENABLE_DIA_SDK=OFF `
+            -DCLANG_ENABLE_OBJC_REWRITER=OFF `
+            -DCLANG_ENABLE_STATIC_ANALYZER=OFF
+
+      - name: Build C2Go Clang on Windows
+        if: runner.os == 'Windows'
+        run: cmake --build build/c2go-clang --config Release --target c2go-toolchain --parallel 4
+
+      - name: Test and build c2go-bind on Linux or macOS
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p build
+          cd components/c2go-bind
+          go test ./...
+          go build -trimpath -ldflags="-s -w -X=main.version=${VERSION}" \
+            -o "${GITHUB_WORKSPACE}/build/c2go-bind" .
+          test "$("${GITHUB_WORKSPACE}/build/c2go-bind" --version)" = "c2go-bind ${VERSION}"
+
+      - name: Test and build c2go-bind on Windows
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          New-Item -ItemType Directory -Force build | Out-Null
+          Push-Location components/c2go-bind
+          go test ./...
+          go build -trimpath "-ldflags=-s -w -X=main.version=$env:VERSION" `
+            -o "$env:GITHUB_WORKSPACE/build/c2go-bind.exe" .
+          Pop-Location
+          $actual = & "$env:GITHUB_WORKSPACE/build/c2go-bind.exe" --version
+          if ($actual -ne "c2go-bind $env:VERSION") {
+            throw "unexpected c2go-bind version: $actual"
+          }
+
+      - name: Test the matched c2go-libc runtime
+        shell: bash
+        run: go test ./...
+        working-directory: components/c2go-libc
+
+      - name: Package Linux or macOS toolchain
+        if: runner.os != 'Windows'
+        shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          SOURCE_DATE_EPOCH: ${{ needs.prepare.outputs.source_date_epoch }}
+        run: |
+          set -euo pipefail
+          python3 scripts/package-toolchain.py \
+            --version "${VERSION}" \
+            --target "${{ matrix.target }}" \
+            --clang-build-dir build/c2go-clang \
+            --c2go-bind build/c2go-bind \
+            --output-dir dist
+
+      - name: Package Windows toolchain
+        if: runner.os == 'Windows'
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          SOURCE_DATE_EPOCH: ${{ needs.prepare.outputs.source_date_epoch }}
+        run: |
+          python3 scripts/package-toolchain.py `
+            --version "$env:VERSION" `
+            --target "${{ matrix.target }}" `
+            --clang-build-dir build/c2go-clang `
+            --c2go-bind build/c2go-bind.exe `
+            --output-dir dist
+
+      - name: Upload target archive
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: c2go-toolchain-${{ matrix.target }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  source:
+    name: Build complete source bundle
+    needs: prepare
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - name: Check out the pinned toolchain
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Revalidate recursive source snapshot
+        run: python3 scripts/verify-release.py --snapshot
+
+      - name: Package complete corresponding source
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          SOURCE_DATE_EPOCH: ${{ needs.prepare.outputs.source_date_epoch }}
+        run: |
+          set -euo pipefail
+          python3 scripts/package-source.py \
+            --version "${VERSION}" \
+            --output-dir dist
+
+      - name: Upload source archive
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: c2go-toolchain-source
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 14
+
+  assemble:
+    name: Assemble release assets
+    needs:
+      - prepare
+      - build
+      - source
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - name: Download target archives
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          pattern: c2go-toolchain-*
+          path: dist
+          merge-multiple: true
+
+      - name: Verify and combine checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dist
+          for checksum in *.sha256; do
+            sha256sum --check "${checksum}"
+          done
+          cat -- *.sha256 | LC_ALL=C sort -k2 >SHA256SUMS
+
+      - name: Upload complete unsigned release bundle
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: c2go-toolchain-${{ needs.prepare.outputs.version }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create immutable GitHub Release draft
+        if: github.ref_type == 'tag'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.prepare.outputs.version }}
+          PRERELEASE: ${{ needs.prepare.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            printf 'release %s already exists; refusing to replace assets\n' "${VERSION}" >&2
+            exit 1
+          fi
+          args=(
+            release create "${VERSION}"
+            --verify-tag
+            --draft
+            --title "C2Go Toolchain ${VERSION}"
+            --generate-notes
+          )
+          if [[ "${PRERELEASE}" == "true" ]]; then
+            args+=( --prerelease )
+          fi
+          gh "${args[@]}" dist/*

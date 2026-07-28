@@ -72,6 +72,11 @@ python3 scripts/verify-release.py
 Then run the documented component build/test matrix. Preserve machine-readable
 logs with the release evidence.
 
+After pushing the reviewed commits (but before creating tags), run the
+`Release C2Go toolchain` workflow manually with the candidate version. This is
+an unsigned dry run: it exercises the same four native build jobs and complete
+source packaging without creating a GitHub Release.
+
 ## 6. Build release artifacts
 
 A Git archive of this repository does not include submodule contents. Build a
@@ -88,12 +93,21 @@ For every binary/source bundle, publish:
 - reproducible build instructions and required bootstrap tools; and
 - SBOM/provenance data when available.
 
+The checked-in workflow currently uses Ubuntu 22.04 for both Linux
+architectures, Windows Server 2022 for Windows amd64, and macOS 14 arm64 with
+`CMAKE_OSX_DEPLOYMENT_TARGET=11.0`. It emits unsigned deterministic archives,
+the complete recursive source bundle, checksum sidecars, and `SHA256SUMS`.
+Signing, Apple notarization, and Windows Authenticode are deliberately not
+configured until the corresponding credentials and policy are available.
+
 ## 7. Tag and publish
 
 Tag reviewed component commits first. Then tag the c2go-toolchain commit whose
-gitlinks and lock file reference those exact commits. Draft the GitHub Release,
-attach verified artifacts, inspect the rendered notices and checksums, and only
-then publish it.
+gitlinks and lock file reference those exact commits. Pushing that tag builds
+the assets and creates a GitHub Release draft using the repository's automatic
+`GITHUB_TOKEN`; no personal access token is required. Inspect the artifacts,
+rendered notices, checksums, and installation smoke tests, then publish the
+draft manually.
 
 Do not move or replace a published tag. Corrections receive a new candidate or
 patch version.

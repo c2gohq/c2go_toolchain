@@ -1,4 +1,5 @@
 .DS_Store
 /dist/
 /release/
+__pycache__/
 *.tmp

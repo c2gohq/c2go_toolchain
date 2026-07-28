@@ -28,7 +28,7 @@
       "name": "c2go-bind",
       "repository": "https://github.com/c2gohq/c2go_bind.git",
       "path": "components/c2go-bind",
-      "revision": "ddd68ae19655a2d64297f1e764e222673684514f",
+      "revision": "87ccdbd2117aa9b9ad6c079b8bf8460cfbe4e4fe",
       "tag": null,
       "license": "AGPL-3.0-only OR separate commercial agreement, with identified third-party portions"
     },

@@ -81,6 +81,19 @@ python3 scripts/verify-release.py
 release 元数据、tag、组件 revision、递归依赖和干净工作树全部一致前，该命令
 不会通过。
 
+release workflow 也支持手动触发 unsigned dry run。它在 GitHub 托管的原生
+runner 上完成构建和测试，并打包：
+
+- Linux amd64 与 arm64（`.tar.gz`）；
+- Windows amd64（`.zip`）；
+- macOS arm64（`.tar.gz`）；
+- 一个递归完整的源码包；
+- 每个文件的 SHA-256 sidecar 与汇总的 `SHA256SUMS`。
+
+推送协同 `v*` tag 后，workflow 会创建 GitHub Release **草稿**。草稿保留为
+许可证、声明、checksum 和安装 smoke test 的人工门禁；workflow 不会覆盖已有
+release，当前也不会对产物签名或公证。
+
 ## 第一个版本
 
 首个公开版本应为 `v0.1.0-rc.1` 之类的 release candidate，而不是稳定
@@ -97,7 +110,8 @@ release 元数据、tag、组件 revision、递归依赖和干净工作树全部
 .
 ├── assets/                 品牌资源及来源说明
 ├── components/             固定 revision 的顶层 submodule
-├── scripts/                fail-closed release 校验
+├── .github/workflows/      原生多平台 release 构建
+├── scripts/                release 校验与确定性打包
 ├── toolchain.lock.json     协同版本和 revision 清单
 ├── RELEASING*.md           发布流程
 ├── LICENSING*.md           聚合仓及组件许可边界
