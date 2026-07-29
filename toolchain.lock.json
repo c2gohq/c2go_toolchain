@@ -20,7 +20,7 @@
       "name": "c2go-clang",
       "repository": "https://github.com/c2gohq/c2go_clang.git",
       "path": "components/c2go-clang",
-      "revision": "3fee061fad2983de27404082379c300c1ebfd54d",
+      "revision": "2718f8b7b0e0e86bccc97ea7c1511d63c8c93d60",
       "tag": null,
       "license": "Apache-2.0 WITH LLVM-exception"
     },
@@ -28,7 +28,7 @@
       "name": "c2go-bind",
       "repository": "https://github.com/c2gohq/c2go_bind.git",
       "path": "components/c2go-bind",
-      "revision": "87ccdbd2117aa9b9ad6c079b8bf8460cfbe4e4fe",
+      "revision": "cd64a2d5b9e5c7ad68e702e2fea39dfd5a6da0ee",
       "tag": null,
       "license": "AGPL-3.0-only OR separate commercial agreement, with identified third-party portions"
     },
@@ -36,7 +36,7 @@
       "name": "c2go-libc",
       "repository": "https://github.com/c2gohq/c2go_libc.git",
       "path": "components/c2go-libc",
-      "revision": "e08d96fbb7f049cdcedd545ac82a02ee340fad7f",
+      "revision": "39fe947490d534d179a670167c4dc107228ba5c7",
       "tag": null,
       "license": "Mixed: original C2Go, musl-derived, and other third-party material"
     }
