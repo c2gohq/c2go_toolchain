@@ -17,6 +17,8 @@ import tarfile
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterator
 
+from release_version import validate_release_version
+
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "toolchain.lock.json"
@@ -233,8 +235,9 @@ def main() -> int:
     parser.add_argument("--output-dir", default=ROOT / "dist", type=Path)
     args = parser.parse_args()
 
-    if re.fullmatch(r"v\d+\.\d+\.\d+(?:-rc\.\d+)?", args.version) is None:
-        fail(f"invalid version {args.version!r}; expected vX.Y.Z or vX.Y.Z-rc.N")
+    version_error = validate_release_version(args.version)
+    if version_error is not None:
+        fail(f"invalid version {args.version!r}: {version_error}")
 
     lock = load_lock()
     epoch = source_date_epoch()

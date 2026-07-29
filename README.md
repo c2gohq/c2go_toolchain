@@ -100,13 +100,24 @@ manual legal, notice, checksum, and installation smoke-test checkpoint; the
 workflow never overwrites an existing release and does not currently sign or
 notarize artifacts.
 
-## First release
+## Versioning and first release
 
-The first public build should be a release candidate such as
-`v0.1.0-rc.1`, not a stable `v0.1.0`. Before that tag, the project must close
-the component-level provenance, generated-artifact, musl, `c2go_libc/dl`,
-clean-clone, and platform-test blockers documented in the component
-repositories.
+Coordinated releases use calendar versions inside a SemVer-compatible envelope:
+
+```text
+vMAJOR.YYYYMMDD.REVISION[-rc.N]
+```
+
+`MAJOR` identifies the compatibility line (`0` while the project is pre-1.0),
+`YYYYMMDD` is the UTC date on which the coordinated release line is cut, and
+`REVISION` starts at `0` and increases for another maintenance release on the
+same date. Release candidates append `-rc.N`; exact dependency revisions remain
+in `toolchain.lock.json`.
+
+The first proposed public build is `v0.20260729.0-rc.1`, not a stable release.
+Before that tag, the project must close the component-level provenance,
+generated-artifact, musl, `c2go_libc/dl`, clean-clone, and platform-test
+blockers documented in the component repositories.
 
 See [RELEASING.md](RELEASING.md) for the initialization and release sequence.
 Do not publish installation instructions until the release gate passes.

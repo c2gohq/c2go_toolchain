@@ -94,11 +94,22 @@ runner 上完成构建和测试，并打包：
 许可证、声明、checksum 和安装 smoke test 的人工门禁；workflow 不会覆盖已有
 release，当前也不会对产物签名或公证。
 
-## 第一个版本
+## 版本规则与第一个版本
 
-首个公开版本应为 `v0.1.0-rc.1` 之类的 release candidate，而不是稳定
-`v0.1.0`。打 tag 前，必须关闭各组件记录的来源审计、生成物、musl、
-`c2go_libc/dl`、clean clone 和平台测试阻断项。
+协同发布采用置于 SemVer 兼容外壳中的日期版本：
+
+```text
+vMAJOR.YYYYMMDD.REVISION[-rc.N]
+```
+
+`MAJOR` 表示兼容线（项目处于 pre-1.0 阶段时为 `0`），`YYYYMMDD` 表示在
+UTC 下建立协同 release 版本线的日期；`REVISION` 从 `0` 开始，同一天发布另一
+维护版本时递增。候选版本追加 `-rc.N`；精确依赖 revision 仍记录在
+`toolchain.lock.json` 中。
+
+建议的首个公开版本是 `v0.20260729.0-rc.1`，不是稳定版本。打 tag 前，必须
+关闭各组件记录的来源审计、生成物、musl、`c2go_libc/dl`、clean clone 和
+平台测试阻断项。
 
 初始化 submodule 和发布的完整顺序见
 [RELEASING.zh-CN.md](RELEASING.zh-CN.md)。release gate 通过之前，不要发布

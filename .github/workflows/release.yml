@@ -7,9 +7,9 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version used for an unsigned dry-run package build
+        description: CalVer version used for an unsigned dry-run package build
         required: true
-        default: v0.1.0-rc.1
+        default: v0.20260729.0-rc.1
         type: string
 
 permissions:
@@ -47,10 +47,7 @@ jobs:
           else
             version="${DISPATCH_VERSION}"
           fi
-          if [[ ! "${version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
-            printf 'invalid release version: %s\n' "${version}" >&2
-            exit 1
-          fi
+          python3 scripts/release_version.py "${version}"
           prerelease=false
           if [[ "${version}" == *-rc.* ]]; then
             prerelease=true
@@ -73,6 +70,10 @@ jobs:
           locked_version="$(python3 -c 'import json; print(json.load(open("toolchain.lock.json"))["release"]["version"])')"
           if [[ "${locked_version}" != "${VERSION}" ]]; then
             printf 'toolchain tag %s does not match lock version %s\n' "${VERSION}" "${locked_version}" >&2
+            exit 1
+          fi
+          if [[ ! -f "RELEASE_NOTES/${VERSION}.md" ]]; then
+            printf 'release notes are missing: RELEASE_NOTES/%s.md\n' "${VERSION}" >&2
             exit 1
           fi
           python3 scripts/verify-release.py
@@ -302,6 +303,12 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Check out release notes
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
       - name: Download target archives
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
@@ -345,7 +352,7 @@ jobs:
             --verify-tag
             --draft
             --title "C2Go Toolchain ${VERSION}"
-            --generate-notes
+            --notes-file "RELEASE_NOTES/${VERSION}.md"
           )
           if [[ "${PRERELEASE}" == "true" ]]; then
             args+=( --prerelease )

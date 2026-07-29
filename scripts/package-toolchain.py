@@ -12,7 +12,6 @@ import hashlib
 import json
 import os
 import platform as host_platform
-import re
 import shutil
 import stat
 import subprocess
@@ -21,6 +20,8 @@ import tempfile
 import zipfile
 from pathlib import Path
 from typing import Any
+
+from release_version import validate_release_version
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -229,8 +230,9 @@ def main() -> int:
     parser.add_argument("--output-dir", default=ROOT / "dist", type=Path)
     args = parser.parse_args()
 
-    if re.fullmatch(r"v\d+\.\d+\.\d+(?:-rc\.\d+)?", args.version) is None:
-        fail(f"invalid version {args.version!r}; expected vX.Y.Z or vX.Y.Z-rc.N")
+    version_error = validate_release_version(args.version)
+    if version_error is not None:
+        fail(f"invalid version {args.version!r}: {version_error}")
     verify_host(args.target)
 
     windows = args.target.startswith("windows-")
@@ -283,6 +285,13 @@ def main() -> int:
 
         for name in TOOLCHAIN_DOCS:
             copy_file(ROOT / name, package_root / name)
+
+        release_notes = ROOT / "RELEASE_NOTES"
+        for suffix in (".md", ".zh-CN.md"):
+            name = f"{args.version}{suffix}"
+            candidate = release_notes / name
+            if candidate.is_file():
+                copy_file(candidate, package_root / "RELEASE_NOTES" / name)
 
         clang_source = ROOT / "components" / "c2go-clang"
         clang_license_dir = package_root / "licenses" / "c2go-clang"

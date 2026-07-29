@@ -14,6 +14,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from release_version import validate_release_version
+
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK_PATH = ROOT / "toolchain.lock.json"
@@ -239,8 +241,9 @@ def validate_release_metadata(lock: dict[str, Any], errors: list[str]) -> None:
         errors.append("release must be an object")
     else:
         version = release.get("version")
-        if not isinstance(version, str) or not re.fullmatch(r"v\d+\.\d+\.\d+(?:-rc\.\d+)?", version):
-            errors.append("release.version must be a version such as v0.1.0-rc.1")
+        version_error = validate_release_version(version)
+        if version_error is not None:
+            errors.append(f"release.version is invalid: {version_error}")
         if release.get("status") not in {"release-candidate", "stable"}:
             errors.append("release.status must be release-candidate or stable")
         published_at = release.get("published_at")

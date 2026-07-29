@@ -50,8 +50,35 @@ At minimum, verify from clean recursive clones:
 
 ## 4. Lock the release
 
-Use one coordinated version, normally the same tag in all three top-level
-components. The first public candidate should be `v0.1.0-rc.1`.
+Use one coordinated version and the same tag in all three top-level
+components. Coordinated releases use:
+
+```text
+vMAJOR.YYYYMMDD.REVISION[-rc.N]
+```
+
+- `MAJOR` is the compatibility line. Keep it at `0` while the public contract
+  remains pre-1.0.
+- `YYYYMMDD` is the UTC date on which the coordinated release line is cut.
+- `REVISION` starts at `0`. Increment it for an additional maintenance release
+  on that same date, such as a post-release correction.
+- `-rc.N` identifies successive candidates for the same base version. Candidate
+  fixes advance `N`; remove the suffix only when promoting the exact final
+  candidate snapshot to stable.
+
+For example, candidate fixes advance from `v0.20260729.0-rc.1` to
+`v0.20260729.0-rc.2`. The corresponding stable version is
+`v0.20260729.0`; a same-day maintenance release starts at
+`v0.20260729.1-rc.1`. Exact component and dependency revisions belong in the
+lock file, not in the version string.
+
+This CalVer-in-SemVer form keeps the coordinated tag usable by the unsuffixed
+Go module paths. Do not use `vYYYY.MM.DD`: zero-padded month/day fields are not
+valid SemVer numeric identifiers, and a year in the SemVer major position would
+require matching `/vYYYY` Go module paths. The first proposed public candidate
+is `v0.20260729.0-rc.1`. Before advancing `MAJOR` beyond `1`, either migrate
+the Go module paths to their required `/vN` suffixes or explicitly decouple
+component tags from the toolchain tag.
 
 Update [toolchain.lock.json](toolchain.lock.json):
 
@@ -59,6 +86,11 @@ Update [toolchain.lock.json](toolchain.lock.json):
 - set every component and nested dependency to its full commit hash and tag;
 - update the Go version window and C2Go ABI epoch only from verified evidence;
 - commit the resulting submodule gitlinks and lock file together.
+
+Prepare the English GitHub Release body as
+`RELEASE_NOTES/<version>.md`. A Chinese companion may be stored as
+`RELEASE_NOTES/<version>.zh-CN.md`. A tagged workflow fails if the English
+release note is missing.
 
 ## 5. Run the release gate
 

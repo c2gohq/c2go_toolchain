@@ -45,8 +45,30 @@ git submodule update --init --recursive
 
 ## 4. 锁定版本
 
-统一 release 通常在三个顶层组件使用同一版本号。首个公开候选版本应为
-`v0.1.0-rc.1`。
+统一 release 在三个顶层组件使用同一个 tag。协同发布版本格式为：
+
+```text
+vMAJOR.YYYYMMDD.REVISION[-rc.N]
+```
+
+- `MAJOR` 是兼容线；公开契约仍处于 pre-1.0 阶段时保持为 `0`。
+- `YYYYMMDD` 是在 UTC 下建立协同 release 版本线的日期。
+- `REVISION` 从 `0` 开始；同一天需要额外发布维护版本（例如正式发布后的修正）
+  时递增。
+- `-rc.N` 表示同一个基础版本的连续候选版；候选期修复只递增 `N`，只有把最后
+  一个候选版的精确快照提升为稳定版时才移除后缀。
+
+例如，候选期修复应从 `v0.20260729.0-rc.1` 升到
+`v0.20260729.0-rc.2`；对应稳定版为 `v0.20260729.0`。如果当天还要发布维护
+版本，则从 `v0.20260729.1-rc.1` 开始。组件和依赖的精确 revision 应写入 lock
+文件，而不是塞进版本字符串。
+
+这种“SemVer 外壳中的 CalVer”可以让统一 tag 继续适用于当前不带主版本后缀的
+Go module path。不要使用 `vYYYY.MM.DD`：带前导零的月、日不是合法 SemVer
+数字字段，把年份放在 SemVer 主版本位置还会要求 Go module path 带对应的
+`/vYYYY` 后缀。建议的首个公开候选版本是 `v0.20260729.0-rc.1`。未来把
+`MAJOR` 提升到 `1` 以上之前，必须把 Go module path 迁移到相应的 `/vN`
+后缀，或明确解除组件 tag 与 toolchain tag 的绑定。
 
 更新 [toolchain.lock.json](toolchain.lock.json)：
 
@@ -54,6 +76,10 @@ git submodule update --init --recursive
 - 为每个组件和嵌套依赖填写完整 commit hash 与 tag；
 - Go 版本窗口和 C2Go ABI epoch 只能依据已验证证据修改；
 - submodule gitlink 与 lock 文件必须在同一个 commit 中提交。
+
+英文 GitHub Release 正文应保存为 `RELEASE_NOTES/<version>.md`；可同时提供
+`RELEASE_NOTES/<version>.zh-CN.md` 中文版本。正式 tag 对应的英文 release
+note 缺失时，workflow 必须失败。
 
 ## 5. 执行 release gate
 
