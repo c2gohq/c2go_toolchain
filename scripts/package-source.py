@@ -298,7 +298,7 @@ def main() -> int:
 
     checksum = sha256_file(archive_path)
     checksum_path = archive_path.with_name(archive_path.name + ".sha256")
-    checksum_path.write_text(f"{checksum}  {archive_path.name}\n", encoding="utf-8")
+    checksum_path.write_bytes(f"{checksum}  {archive_path.name}\n".encode("ascii"))
     print(archive_path)
     print(checksum_path)
     return 0

@@ -322,6 +322,8 @@ jobs:
           set -euo pipefail
           cd dist
           for checksum in *.sha256; do
+            tr -d '\r' <"${checksum}" >"${checksum}.lf"
+            mv -- "${checksum}.lf" "${checksum}"
             sha256sum --check "${checksum}"
           done
           cat -- *.sha256 | LC_ALL=C sort -k2 >SHA256SUMS
