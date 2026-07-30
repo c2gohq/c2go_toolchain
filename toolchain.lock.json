@@ -36,7 +36,7 @@
       "name": "c2go-libc",
       "repository": "https://github.com/c2gohq/c2go_libc.git",
       "path": "components/c2go-libc",
-      "revision": "b51ecfb5ebcbb498d97243877db209b3e61e0851",
+      "revision": "e75d4d19ba5c7ff49aa88a12772c25b5fdd465cd",
       "tag": null,
       "license": "Mixed: original C2Go, musl-derived, and other third-party material"
     }
