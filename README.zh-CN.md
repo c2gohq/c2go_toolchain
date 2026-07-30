@@ -14,8 +14,8 @@
 
 > **预发布协调仓库——尚不能用于生产环境**
 >
-> 本仓库已通过 Git submodule 固定当前预发布组件快照，但尚未发布协同 tag 或
-> 可安装的 C2Go 版本。
+> 本仓库已通过 Git submodule 固定首个协同候选版本
+> `v0.20260729.0-rc.1`。这是未签名的评估版本，尚不能作为生产工具链使用。
 
 ## 本仓库的职责
 
@@ -60,11 +60,12 @@ Go 可执行文件或库
 本仓库有意采用 fail-closed 设计：
 
 - `.gitmodules` 已记录三个公开组件远端，gitlink 固定到各远端可达的 commit；
-- [toolchain.lock.json](toolchain.lock.json) 已记录这些精确 revision，而 release
-  tag 与协同发布元数据仍保持未设置；
-- release 元数据或 tag 未填写时，正式 release 校验必须失败；
-- 暂定兼容范围为 Go 1.25.x 和 C2Go ABI epoch 1，最终仍以 clean checkout
-  的 release 验证为准。
+- [toolchain.lock.json](toolchain.lock.json) 已记录这些精确 revision、统一 RC tag
+  和不可变 release 元数据；
+- release 元数据、远端 tag、组件 revision、递归依赖或干净工作树不一致时，正式
+  release 校验必须失败；
+- 候选版本的兼容范围为 Go 1.25.x 和 C2Go ABI epoch 1，并已由四目标原生 release
+  dry run 覆盖。
 
 只检查仓库骨架结构：
 
@@ -107,9 +108,8 @@ UTC 下建立协同 release 版本线的日期；`REVISION` 从 `0` 开始，同
 维护版本时递增。候选版本追加 `-rc.N`；精确依赖 revision 仍记录在
 `toolchain.lock.json` 中。
 
-建议的首个公开版本是 `v0.20260729.0-rc.1`，不是稳定版本。打 tag 前，必须
-关闭各组件记录的来源审计、生成物、musl、`c2go_libc/dl`、clean clone 和
-平台测试阻断项。
+首个公开候选版本是 `v0.20260729.0-rc.1`，不是稳定版本；它用于评估、可复现性
+检查和兼容性测试。
 
 初始化 submodule 和发布的完整顺序见
 [RELEASING.zh-CN.md](RELEASING.zh-CN.md)。release gate 通过之前，不要发布

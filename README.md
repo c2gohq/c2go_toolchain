@@ -14,9 +14,9 @@
 
 > **PRE-RELEASE COORDINATION REPOSITORY — NOT READY FOR PRODUCTION USE**
 >
-> This repository pins current pre-release component snapshots as Git
-> submodules. No coordinated tag or installable C2Go release has been published
-> from this checkout yet.
+> This repository pins the first coordinated release candidate,
+> `v0.20260729.0-rc.1`, as Git submodules. It is an unsigned evaluation release,
+> not a production-ready toolchain.
 
 ## What this repository is
 
@@ -64,12 +64,13 @@ The repository is deliberately fail-closed:
 
 - `.gitmodules` records the three public component remotes, and the gitlinks are
   pinned to commits that are reachable from those remotes;
-- [toolchain.lock.json](toolchain.lock.json) records those exact revisions while
-  release tags and coordinated release metadata remain unset;
-- the default release verifier must fail while release metadata or tags are
-  unset; and
-- the provisional compatibility window is Go 1.25.x and C2Go ABI epoch 1,
-  subject to clean-checkout release validation.
+- [toolchain.lock.json](toolchain.lock.json) records those exact revisions, the
+  coordinated RC tag, and immutable release metadata;
+- the default release verifier fails unless release metadata, remote tags,
+  component revisions, recursive dependencies, and clean worktrees all agree;
+  and
+- the candidate compatibility window is Go 1.25.x and C2Go ABI epoch 1, covered
+  by the native four-target release dry run.
 
 Validate only the scaffold structure with:
 
@@ -114,10 +115,8 @@ vMAJOR.YYYYMMDD.REVISION[-rc.N]
 same date. Release candidates append `-rc.N`; exact dependency revisions remain
 in `toolchain.lock.json`.
 
-The first proposed public build is `v0.20260729.0-rc.1`, not a stable release.
-Before that tag, the project must close the component-level provenance,
-generated-artifact, musl, `c2go_libc/dl`, clean-clone, and platform-test
-blockers documented in the component repositories.
+The first public candidate is `v0.20260729.0-rc.1`, not a stable release. It is
+intended for evaluation, reproducibility checks, and compatibility testing.
 
 See [RELEASING.md](RELEASING.md) for the initialization and release sequence.
 Do not publish installation instructions until the release gate passes.
