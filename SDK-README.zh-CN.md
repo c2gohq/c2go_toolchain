@@ -12,7 +12,7 @@
 
 ```text
 .
-├── bin/                         clang、c2go-lto、c2go-bind
+├── bin/                         c2go-clang、c2go-lto、c2go-bind
 ├── include/                     c2go.h 与 c2go-libc 公共 C 头文件
 ├── lib/clang/<version>/         Clang 运行时必需的 resource 文件
 ├── licenses/                    各组件及第三方授权记录
@@ -22,7 +22,7 @@
 ```
 
 SDK 可以整体移动，但 `bin/`、`include/` 和 `lib/` 必须位于同一个根目录下。
-`clang` 在 `-fc2go` 模式会自动找到本包的 `include/` 和自身 resource 目录，不要
+`c2go-clang` 在 `-fc2go` 模式会自动找到本包的 `include/` 和自身 resource 目录，不要
 额外加入宿主系统 libc 的头文件目录。
 
 ## 环境要求
@@ -74,7 +74,7 @@ c2go_extern int add(int a, int b) { return a + b; }
 ```sh
 export C2GO_TARGET=aarch64-apple-darwin
 
-clang --target="$C2GO_TARGET" \
+c2go-clang --target="$C2GO_TARGET" \
   -fc2go \
   -fc2go-package=example.com/demo/translated \
   -O2 \

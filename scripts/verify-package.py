@@ -203,19 +203,31 @@ def verify_layout(
         extra = sorted(installed_headers - expected_headers)
         fail(f"wrong public header set; missing={missing}, extra={extra}")
 
+    duplicate_c2go_headers = sorted(
+        name
+        for name in relative_files
+        if name.startswith("lib/clang/") and name.endswith("/include/c2go.h")
+    )
+    if duplicate_c2go_headers:
+        fail(f"c2go.h is duplicated in the Clang resource tree: {duplicate_c2go_headers}")
+
     missing_licenses = sorted(REQUIRED_LICENSES - relative_files)
     if missing_licenses:
         fail(f"required license records are missing: {missing_licenses}")
 
     executable_suffix = ".exe" if target.startswith("windows-") else ""
     required_binaries = {
-        f"bin/clang{executable_suffix}",
+        f"bin/c2go-clang{executable_suffix}",
         f"bin/c2go-lto{executable_suffix}",
         f"bin/c2go-bind{executable_suffix}",
     }
-    missing_binaries = sorted(required_binaries - relative_files)
-    if missing_binaries:
-        fail(f"required tools are missing: {missing_binaries}")
+    installed_binaries = {
+        name for name in relative_files if name.startswith("bin/")
+    }
+    if installed_binaries != required_binaries:
+        missing = sorted(required_binaries - installed_binaries)
+        extra = sorted(installed_binaries - required_binaries)
+        fail(f"wrong installed tool set; missing={missing}, extra={extra}")
 
 
 def verify_build_info(package_root: Path, version: str, target: str) -> None:
@@ -257,7 +269,7 @@ def verify_pipeline(
     package_root: Path, triple: str, target: str, libc_source: Path
 ) -> None:
     executable_suffix = ".exe" if target.startswith("windows-") else ""
-    clang = package_root / "bin" / f"clang{executable_suffix}"
+    clang = package_root / "bin" / f"c2go-clang{executable_suffix}"
     c2go_lto = package_root / "bin" / f"c2go-lto{executable_suffix}"
     c2go_bind = package_root / "bin" / f"c2go-bind{executable_suffix}"
     for binary in (clang, c2go_lto, c2go_bind):

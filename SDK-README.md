@@ -15,7 +15,7 @@ source is published as the separate `-source` release asset.
 
 ```text
 .
-├── bin/                         clang, c2go-lto, and c2go-bind
+├── bin/                         c2go-clang, c2go-lto, and c2go-bind
 ├── include/                     c2go.h and c2go-libc public C headers
 ├── lib/clang/<version>/         Clang resource files required at runtime
 ├── licenses/                    component and third-party license records
@@ -25,7 +25,7 @@ source is published as the separate `-source` release asset.
 ```
 
 The SDK is relocatable. Keep `bin/`, `include/`, and `lib/` under the same
-directory. In `-fc2go` mode, the packaged `clang` finds `include/` and its own
+directory. In `-fc2go` mode, the packaged `c2go-clang` finds `include/` and its own
 resource directory automatically; do not add a host libc include directory.
 
 ## Requirements
@@ -79,7 +79,7 @@ triple from the table):
 ```sh
 export C2GO_TARGET=aarch64-apple-darwin
 
-clang --target="$C2GO_TARGET" \
+c2go-clang --target="$C2GO_TARGET" \
   -fc2go \
   -fc2go-package=example.com/demo/translated \
   -O2 \

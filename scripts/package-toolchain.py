@@ -309,10 +309,13 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix="c2go-toolchain-package-") as temporary:
         package_root = Path(temporary) / archive_root_name
         bin_dir = package_root / "bin"
-        copy_file(clang, bin_dir / f"clang{executable_suffix}", executable=True)
+        copy_file(
+            clang, bin_dir / f"c2go-clang{executable_suffix}", executable=True
+        )
         copy_file(c2go_lto, bin_dir / f"c2go-lto{executable_suffix}", executable=True)
         copy_file(c2go_bind, bin_dir / f"c2go-bind{executable_suffix}", executable=True)
-        copy_tree(resource_dir, package_root / "lib" / "clang" / resource_dir.name)
+        installed_resource_dir = package_root / "lib" / "clang" / resource_dir.name
+        copy_tree(resource_dir, installed_resource_dir)
 
         libc_source = ROOT / "components" / "c2go-libc"
         copy_tracked_subtree(
@@ -322,6 +325,9 @@ def main() -> int:
             resource_dir / "include" / "c2go.h",
             package_root / "include" / "c2go.h",
         )
+        # c2go.h is a public SDK header.  Keep its canonical installed copy in
+        # <prefix>/include rather than duplicating it in the Clang resource tree.
+        (installed_resource_dir / "include" / "c2go.h").unlink()
 
         for source_name, installed_name in SDK_DOCS:
             render_text_file(

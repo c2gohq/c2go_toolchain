@@ -374,7 +374,7 @@ jobs:
               release create "${VERSION}"
               --verify-tag
               --draft
-              --title "C2Go Toolchain ${VERSION}"
+              --title "${VERSION}"
               --notes-file "RELEASE_NOTES/${VERSION}.md"
             )
             if [[ "${PRERELEASE}" == "true" ]]; then
