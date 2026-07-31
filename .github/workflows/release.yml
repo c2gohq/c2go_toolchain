@@ -336,7 +336,7 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-      - name: Create immutable GitHub Release draft
+      - name: Create or resume GitHub Release draft
         if: github.ref_type == 'tag'
         shell: bash
         env:
@@ -346,17 +346,68 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "${VERSION}" >/dev/null 2>&1; then
-            printf 'release %s already exists; refusing to replace assets\n' "${VERSION}" >&2
-            exit 1
+            is_draft="$(gh release view "${VERSION}" --json isDraft --jq .isDraft)"
+            if [[ "${is_draft}" != "true" ]]; then
+              printf 'release %s is already published; refusing to replace assets\n' "${VERSION}" >&2
+              exit 1
+            fi
+            printf 'resuming existing draft release %s\n' "${VERSION}"
+          else
+            args=(
+              release create "${VERSION}"
+              --verify-tag
+              --draft
+              --title "C2Go Toolchain ${VERSION}"
+              --notes-file "RELEASE_NOTES/${VERSION}.md"
+            )
+            if [[ "${PRERELEASE}" == "true" ]]; then
+              args+=( --prerelease )
+            fi
+            if ! gh "${args[@]}"; then
+              # `gh release create` and asset uploads are separate API calls. If
+              # the create response was lost, accept only the draft it created.
+              sleep 5
+              is_draft="$(gh release view "${VERSION}" --json isDraft --jq .isDraft 2>/dev/null || true)"
+              if [[ "${is_draft}" != "true" ]]; then
+                exit 1
+              fi
+            fi
           fi
-          args=(
-            release create "${VERSION}"
-            --verify-tag
-            --draft
-            --title "C2Go Toolchain ${VERSION}"
-            --notes-file "RELEASE_NOTES/${VERSION}.md"
-          )
-          if [[ "${PRERELEASE}" == "true" ]]; then
-            args+=( --prerelease )
-          fi
-          gh "${args[@]}" dist/*
+
+          # A newly-created draft can briefly return 404 from uploads.github.com.
+          # Upload one asset at a time with bounded backoff. On a lost success
+          # response, accept an existing asset only when its byte size matches;
+          # never delete or overwrite an asset automatically.
+          sleep 5
+          for asset in dist/*; do
+            name="$(basename "${asset}")"
+            local_size="$(stat -c %s -- "${asset}")"
+            uploaded=false
+            for attempt in 1 2 3 4 5 6; do
+              remote_size="$(
+                gh release view "${VERSION}" --json assets \
+                  --jq ".assets[] | select(.name == \"${name}\") | .size" \
+                  2>/dev/null | head -n1 || true
+              )"
+              if [[ -n "${remote_size}" ]]; then
+                if [[ "${remote_size}" != "${local_size}" ]]; then
+                  printf 'draft asset %s has size %s, expected %s; refusing to overwrite\n' \
+                    "${name}" "${remote_size}" "${local_size}" >&2
+                  exit 1
+                fi
+                uploaded=true
+                break
+              fi
+              if gh release upload "${VERSION}" "${asset}"; then
+                uploaded=true
+                break
+              fi
+              if [[ "${attempt}" -lt 6 ]]; then
+                sleep "$((attempt * 5))"
+              fi
+            done
+            if [[ "${uploaded}" != "true" ]]; then
+              printf 'failed to upload release asset after retries: %s\n' "${name}" >&2
+              exit 1
+            fi
+          done
