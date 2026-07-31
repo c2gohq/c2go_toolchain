@@ -15,7 +15,7 @@
 > **PRE-RELEASE COORDINATION REPOSITORY — NOT READY FOR PRODUCTION USE**
 >
 > This repository pins the current coordinated release candidate,
-> `v0.20260729.0-rc.2`, as Git submodules. It is an unsigned evaluation release,
+> `v0.20260729.0-rc.3`, as Git submodules. It is an unsigned evaluation release,
 > not a production-ready toolchain.
 
 ## What this repository is
@@ -90,11 +90,17 @@ recursive dependencies, and clean working trees all agree.
 The release workflow also supports a manually dispatched unsigned dry run. It
 builds and tests on native GitHub-hosted runners, then packages:
 
-- Linux amd64 and arm64 (`.tar.gz`);
-- Windows amd64 (`.zip`);
-- macOS arm64 (`.tar.gz`);
+- relocatable binary SDKs for Linux amd64 and arm64 (`.tar.gz`), Windows amd64
+  (`.zip`), and macOS arm64 (`.tar.gz`), each containing only installed
+  `bin/`, `include/`, `lib/`, `licenses/`, and release metadata;
 - one recursively complete source archive; and
 - per-file SHA-256 sidecars plus a combined `SHA256SUMS`.
+
+The binary SDKs do not contain repository checkouts, tests, or source trees.
+Each native builder extracts its archive, checks the exact installed header and
+license sets, compiles every supported public header without an extra `-I`, and
+runs a complete packaged C-to-Go smoke test before upload. The separate source
+archive supplies the corresponding source.
 
 A coordinated `v*` tag creates a GitHub Release **draft**. The draft remains a
 manual legal, notice, checksum, and installation smoke-test checkpoint; the
@@ -115,11 +121,12 @@ vMAJOR.YYYYMMDD.REVISION[-rc.N]
 same date. Release candidates append `-rc.N`; exact dependency revisions remain
 in `toolchain.lock.json`.
 
-The current public candidate is `v0.20260729.0-rc.2`, not a stable release. It is
+The current public candidate is `v0.20260729.0-rc.3`, not a stable release. It is
 intended for evaluation, reproducibility checks, and compatibility testing.
 
 See [RELEASING.md](RELEASING.md) for the initialization and release sequence.
-Do not publish installation instructions until the release gate passes.
+The platform archive includes an SDK-specific English and Chinese README with
+the matched runtime-module and C-to-Go quick-start instructions.
 
 ## Repository layout
 
@@ -128,6 +135,7 @@ Do not publish installation instructions until the release gate passes.
 ├── assets/                 Project branding and provenance notes
 ├── components/             Pinned top-level submodules
 ├── .github/workflows/      Native multi-platform release build
+├── SDK-README*.md          README templates installed in binary SDKs
 ├── scripts/                Release validation and deterministic packaging
 ├── toolchain.lock.json     Coordinated version and revision manifest
 ├── RELEASING.md            Release procedure

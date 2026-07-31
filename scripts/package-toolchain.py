@@ -34,9 +34,12 @@ TARGETS = {
     "macos-arm64": ("Darwin", {"arm64", "aarch64"}, ".tar.gz"),
 }
 
-TOOLCHAIN_DOCS = (
-    "README.md",
-    "README.zh-CN.md",
+SDK_DOCS = (
+    ("SDK-README.md", "README.md"),
+    ("SDK-README.zh-CN.md", "README.zh-CN.md"),
+)
+
+TOOLCHAIN_LEGAL_DOCS = (
     "LICENSE",
     "NOTICE",
     "LICENSING.md",
@@ -44,19 +47,28 @@ TOOLCHAIN_DOCS = (
     "COMMERCIAL-LICENSING.md",
     "COMMERCIAL-LICENSING.zh-CN.md",
     "TRADEMARKS.md",
-    "RELEASING.md",
-    "RELEASING.zh-CN.md",
     "toolchain.lock.json",
 )
 
 CLANG_DOCS = (
-    "README.md",
-    "README.zh-CN.md",
     "LICENSE.TXT",
     "NOTICE",
     "C2GO-LICENSING.md",
     "C2GO-LICENSING.zh-CN.md",
 )
+
+BIND_DOCS = (
+    "LICENSE",
+    "NOTICE",
+    "LICENSING.md",
+    "LICENSING.zh-CN.md",
+    "COMMERCIAL-LICENSING.md",
+    "COMMERCIAL-LICENSING.zh-CN.md",
+    "PROVENANCE.md",
+    "THIRD_PARTY_NOTICES.md",
+)
+
+LIBC_DOCS = BIND_DOCS
 
 
 def fail(message: str) -> None:
@@ -119,15 +131,27 @@ def copy_file(source: Path, destination: Path, executable: bool = False) -> None
         destination.chmod(mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 
 
+def render_text_file(source: Path, destination: Path, replacements: dict[str, str]) -> None:
+    if not source.is_file():
+        fail(f"required file is missing: {source}")
+    text = source.read_text(encoding="utf-8")
+    for marker, value in replacements.items():
+        text = text.replace(marker, value)
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(text, encoding="utf-8")
+
+
 def copy_tree(source: Path, destination: Path) -> None:
     if not source.is_dir():
         fail(f"required directory is missing: {source}")
     shutil.copytree(source, destination, symlinks=True)
 
 
-def copy_tracked_tree(repository: Path, destination: Path) -> None:
+def copy_tracked_subtree(
+    repository: Path, subtree: Path, destination: Path
+) -> None:
     output = subprocess.run(
-        ["git", "ls-files", "-z"],
+        ["git", "ls-files", "-z", "--", subtree.as_posix()],
         cwd=repository,
         check=False,
         stdout=subprocess.PIPE,
@@ -135,20 +159,27 @@ def copy_tracked_tree(repository: Path, destination: Path) -> None:
     )
     if output.returncode != 0:
         fail(f"git ls-files failed in {repository}: {output.stderr.decode().strip()}")
+    copied = 0
     for raw_path in output.stdout.split(b"\0"):
         if not raw_path:
             continue
         relative = Path(os.fsdecode(raw_path))
+        try:
+            installed_relative = relative.relative_to(subtree)
+        except ValueError:
+            fail(f"tracked path {relative} escapes requested subtree {subtree}")
         source = repository / relative
-        target = destination / relative
+        target = destination / installed_relative
         if source.is_symlink():
             target.parent.mkdir(parents=True, exist_ok=True)
             target.symlink_to(os.readlink(source))
         elif source.is_file():
             copy_file(source, target, bool(source.stat().st_mode & stat.S_IXUSR))
-        # A gitlink such as c2go-libc/musl is a directory in the checkout.
-        # Its exact revision is in toolchain.lock.json; do not copy its worktree
-        # into the binary archive as though it were owned c2go-libc source.
+        else:
+            fail(f"tracked SDK file is missing or unsupported: {source}")
+        copied += 1
+    if copied == 0:
+        fail(f"tracked SDK subtree is empty: {repository}/{subtree}")
 
 
 def sha256_file(path: Path) -> str:
@@ -283,15 +314,23 @@ def main() -> int:
         copy_file(c2go_bind, bin_dir / f"c2go-bind{executable_suffix}", executable=True)
         copy_tree(resource_dir, package_root / "lib" / "clang" / resource_dir.name)
 
-        for name in TOOLCHAIN_DOCS:
-            copy_file(ROOT / name, package_root / name)
+        libc_source = ROOT / "components" / "c2go-libc"
+        copy_tracked_subtree(
+            libc_source, Path("csrc/include"), package_root / "include"
+        )
+        copy_file(
+            resource_dir / "include" / "c2go.h",
+            package_root / "include" / "c2go.h",
+        )
 
-        release_notes = ROOT / "RELEASE_NOTES"
-        for suffix in (".md", ".zh-CN.md"):
-            name = f"{args.version}{suffix}"
-            candidate = release_notes / name
-            if candidate.is_file():
-                copy_file(candidate, package_root / "RELEASE_NOTES" / name)
+        for source_name, installed_name in SDK_DOCS:
+            render_text_file(
+                ROOT / source_name,
+                package_root / installed_name,
+                {"@C2GO_VERSION@": args.version},
+            )
+        for name in TOOLCHAIN_LEGAL_DOCS:
+            copy_file(ROOT / name, package_root / name)
 
         clang_source = ROOT / "components" / "c2go-clang"
         clang_license_dir = package_root / "licenses" / "c2go-clang"
@@ -301,9 +340,19 @@ def main() -> int:
                 copy_file(candidate, clang_license_dir / name)
 
         bind_source = ROOT / "components" / "c2go-bind"
-        libc_source = ROOT / "components" / "c2go-libc"
-        copy_tracked_tree(bind_source, package_root / "src" / "c2go-bind")
-        copy_tracked_tree(libc_source, package_root / "lib" / "c2go_libc")
+        bind_license_dir = package_root / "licenses" / "c2go-bind"
+        for name in BIND_DOCS:
+            copy_file(bind_source / name, bind_license_dir / name)
+        copy_tracked_subtree(
+            bind_source, Path("LICENSES"), bind_license_dir / "LICENSES"
+        )
+
+        libc_license_dir = package_root / "licenses" / "c2go-libc"
+        for name in LIBC_DOCS:
+            copy_file(libc_source / name, libc_license_dir / name)
+        copy_tracked_subtree(
+            libc_source, Path("LICENSES"), libc_license_dir / "LICENSES"
+        )
 
         musl_copyright = libc_source / "musl" / "COPYRIGHT"
         if musl_copyright.is_file():
@@ -313,7 +362,8 @@ def main() -> int:
         for binary in sorted(bin_dir.iterdir()):
             binaries[binary.name] = sha256_file(binary)
         build_info = {
-            "schema_version": 1,
+            "schema_version": 2,
+            "layout": "c2go-sdk-v1",
             "version": args.version,
             "target": args.target,
             "source_date_epoch": epoch,
@@ -322,6 +372,10 @@ def main() -> int:
             "c2go_bind_version": bind_version,
             "components": lock.get("components", []),
             "nested_dependencies": lock.get("nested_dependencies", []),
+            "c2go_libc_module": {
+                "path": "github.com/c2gohq/c2go_libc",
+                "version": args.version,
+            },
             "binaries_sha256": binaries,
         }
         (package_root / "BUILD-INFO.json").write_text(

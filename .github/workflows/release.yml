@@ -251,6 +251,23 @@ jobs:
             --c2go-bind build/c2go-bind.exe `
             --output-dir dist
 
+      - name: Verify installed SDK archive end to end
+        shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          TARGET: ${{ matrix.target }}
+        run: |
+          set -euo pipefail
+          suffix=.tar.gz
+          if [[ "${TARGET}" == windows-* ]]; then
+            suffix=.zip
+          fi
+          python3 scripts/verify-package.py \
+            --version "${VERSION}" \
+            --target "${TARGET}" \
+            --archive "dist/c2go-toolchain-${VERSION}-${TARGET}${suffix}" \
+            --libc-source components/c2go-libc
+
       - name: Upload target archive
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:

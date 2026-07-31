@@ -101,6 +101,12 @@ python3 scripts/verify-release.py
 本仓库的普通 Git archive 不包含 submodule 内容。必须生成完整源码包：其中包含
 或能够以合规、可复现方式取得构建发布产物时使用的每个精确组件及嵌套依赖。
 
+平台 SDK 必须与该源码包严格分离。平台 SDK 必须是已安装、可搬移的目录树，
+包含 `bin/`、公共 `include/`、必需的 `lib/` 运行资源、`licenses/` 和 release
+元数据；不得包含仓库镜像、测试、构建脚本或组件源码树。上传前必须在原生
+builder 上解压每个 SDK，并对解压产物运行 `scripts/verify-package.py`；
+不得用 build 目录中的工具代替压缩包安装验证。
+
 每个二进制或源码包都应发布：
 
 - 文件名、平台、架构和 toolchain 版本；

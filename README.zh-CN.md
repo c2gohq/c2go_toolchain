@@ -15,7 +15,7 @@
 > **预发布协调仓库——尚不能用于生产环境**
 >
 > 本仓库已通过 Git submodule 固定当前协同候选版本
-> `v0.20260729.0-rc.2`。这是未签名的评估版本，尚不能作为生产工具链使用。
+> `v0.20260729.0-rc.3`。这是未签名的评估版本，尚不能作为生产工具链使用。
 
 ## 本仓库的职责
 
@@ -85,11 +85,16 @@ release 元数据、tag、组件 revision、递归依赖和干净工作树全部
 release workflow 也支持手动触发 unsigned dry run。它在 GitHub 托管的原生
 runner 上完成构建和测试，并打包：
 
-- Linux amd64 与 arm64（`.tar.gz`）；
-- Windows amd64（`.zip`）；
-- macOS arm64（`.tar.gz`）；
+- Linux amd64/arm64（`.tar.gz`）、Windows amd64（`.zip`）和 macOS
+  arm64（`.tar.gz`）的可搬移二进制 SDK；每个平台包只包含已安装的
+  `bin/`、`include/`、`lib/`、`licenses/` 与 release 元数据；
 - 一个递归完整的源码包；
 - 每个文件的 SHA-256 sidecar 与汇总的 `SHA256SUMS`。
+
+二进制 SDK 不再包含仓库 checkout、测试或源码树。每个原生 builder 会在上传前
+解压自己的产物，检查精确的已安装头文件和许可文件集，不添加额外 `-I`
+编译每个受支持的公共头文件，并完整跑通已打包工具的 C 到 Go smoke test。
+对应源码由独立源码包提供。
 
 推送协同 `v*` tag 后，workflow 会创建 GitHub Release **草稿**。草稿保留为
 许可证、声明、checksum 和安装 smoke test 的人工门禁；workflow 不会覆盖已有
@@ -108,12 +113,12 @@ UTC 下建立协同 release 版本线的日期；`REVISION` 从 `0` 开始，同
 维护版本时递增。候选版本追加 `-rc.N`；精确依赖 revision 仍记录在
 `toolchain.lock.json` 中。
 
-当前公开候选版本是 `v0.20260729.0-rc.2`，不是稳定版本；它用于评估、可复现性
+当前公开候选版本是 `v0.20260729.0-rc.3`，不是稳定版本；它用于评估、可复现性
 检查和兼容性测试。
 
 初始化 submodule 和发布的完整顺序见
-[RELEASING.zh-CN.md](RELEASING.zh-CN.md)。release gate 通过之前，不要发布
-安装说明。
+[RELEASING.zh-CN.md](RELEASING.zh-CN.md)。平台压缩包内置 SDK 专用中英文
+README，包含匹配 runtime module 和 C 到 Go 快速上手说明。
 
 ## 仓库结构
 
@@ -122,6 +127,7 @@ UTC 下建立协同 release 版本线的日期；`REVISION` 从 `0` 开始，同
 ├── assets/                 品牌资源及来源说明
 ├── components/             固定 revision 的顶层 submodule
 ├── .github/workflows/      原生多平台 release 构建
+├── SDK-README*.md          安装到二进制 SDK 的 README 模板
 ├── scripts/                release 校验与确定性打包
 ├── toolchain.lock.json     协同版本和 revision 清单
 ├── RELEASING*.md           发布流程

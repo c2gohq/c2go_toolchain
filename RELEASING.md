@@ -116,6 +116,13 @@ complete release source bundle that contains or fetches, in a
 license-compliant and reproducible way, every exact component and nested
 dependency used to build shipped artifacts.
 
+Keep platform SDKs distinct from that source bundle. A platform SDK must be an
+installed, relocatable tree containing `bin/`, public `include/`, required
+`lib/` runtime resources, `licenses/`, and release metadata. It must not contain
+repository mirrors, tests, build scripts, or component source trees. Before
+upload, extract each SDK and run `scripts/verify-package.py` on its native
+builder; do not validate tools from the build directory in place of the archive.
+
 For every binary/source bundle, publish:
 
 - filename, platform, architecture, and toolchain version;
