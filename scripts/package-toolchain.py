@@ -321,13 +321,6 @@ def main() -> int:
         copy_tracked_subtree(
             libc_source, Path("csrc/include"), package_root / "include"
         )
-        copy_file(
-            resource_dir / "include" / "c2go.h",
-            package_root / "include" / "c2go.h",
-        )
-        # c2go.h is a public SDK header.  Keep its canonical installed copy in
-        # <prefix>/include rather than duplicating it in the Clang resource tree.
-        (installed_resource_dir / "include" / "c2go.h").unlink()
 
         for source_name, installed_name in SDK_DOCS:
             render_text_file(

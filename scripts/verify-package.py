@@ -192,7 +192,7 @@ def verify_layout(
     if forbidden:
         fail(f"binary SDK contains source-tree payloads: {forbidden[:10]}")
 
-    expected_headers = tracked_public_headers(libc_source) | {"c2go.h"}
+    expected_headers = tracked_public_headers(libc_source)
     installed_headers = {
         str(PurePosixPath(name).relative_to("include"))
         for name in relative_files
@@ -203,13 +203,16 @@ def verify_layout(
         extra = sorted(installed_headers - expected_headers)
         fail(f"wrong public header set; missing={missing}, extra={extra}")
 
-    duplicate_c2go_headers = sorted(
+    resource_c2go_headers = sorted(
         name
         for name in relative_files
         if name.startswith("lib/clang/") and name.endswith("/include/c2go.h")
     )
-    if duplicate_c2go_headers:
-        fail(f"c2go.h is duplicated in the Clang resource tree: {duplicate_c2go_headers}")
+    if len(resource_c2go_headers) != 1:
+        fail(
+            "c2go.h must have exactly one compiler-resource copy; "
+            f"found={resource_c2go_headers}"
+        )
 
     missing_licenses = sorted(REQUIRED_LICENSES - relative_files)
     if missing_licenses:

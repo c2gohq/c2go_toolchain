@@ -16,8 +16,8 @@ source is published as the separate `-source` release asset.
 ```text
 .
 ├── bin/                         c2go-clang, c2go-lto, and c2go-bind
-├── include/                     c2go.h and c2go-libc public C headers
-├── lib/clang/<version>/         Clang resource files required at runtime
+├── include/                     c2go-libc public C headers
+├── lib/clang/<version>/         Clang resources, including c2go.h
 ├── licenses/                    component and third-party license records
 ├── BUILD-INFO.json              target, versions, revisions, and checksums
 ├── toolchain.lock.json          coordinated source snapshot

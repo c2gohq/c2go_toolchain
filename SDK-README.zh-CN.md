@@ -13,8 +13,8 @@
 ```text
 .
 ├── bin/                         c2go-clang、c2go-lto、c2go-bind
-├── include/                     c2go.h 与 c2go-libc 公共 C 头文件
-├── lib/clang/<version>/         Clang 运行时必需的 resource 文件
+├── include/                     c2go-libc 公共 C 头文件
+├── lib/clang/<version>/         Clang resource，包含 c2go.h
 ├── licenses/                    各组件及第三方授权记录
 ├── BUILD-INFO.json              目标、版本、revision 与校验值
 ├── toolchain.lock.json          协同源码快照
