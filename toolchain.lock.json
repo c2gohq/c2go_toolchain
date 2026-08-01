@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
   "release": {
-    "version": "v0.20260801.0-rc.1",
-    "status": "release-candidate",
-    "published_at": "2026-08-01T14:14:00Z"
+    "version": null,
+    "status": "pre-release",
+    "published_at": null
   },
   "compatibility": {
     "go": {
@@ -20,8 +20,8 @@
       "name": "c2go-clang",
       "repository": "https://github.com/c2gohq/c2go_clang.git",
       "path": "components/c2go-clang",
-      "revision": "c20af78f41c5ea34d0da970c4ce1cd83ca338420",
-      "tag": "v0.20260801.0-rc.1",
+      "revision": "f92242cd554a95ae5cb7a586376d3ee28d533ebd",
+      "tag": null,
       "license": "Apache-2.0 WITH LLVM-exception"
     },
     {
@@ -29,7 +29,7 @@
       "repository": "https://github.com/c2gohq/c2go_bind.git",
       "path": "components/c2go-bind",
       "revision": "12759ab5ae6c7a71045e7768369c55b7e7bda477",
-      "tag": "v0.20260801.0-rc.1",
+      "tag": null,
       "license": "AGPL-3.0-only OR separate commercial agreement, with identified third-party portions"
     },
     {
@@ -37,7 +37,7 @@
       "repository": "https://github.com/c2gohq/c2go_libc.git",
       "path": "components/c2go-libc",
       "revision": "f0f11239eaaaefcd144994bed689b22132ceb16b",
-      "tag": "v0.20260801.0-rc.1",
+      "tag": null,
       "license": "Mixed: original C2Go, musl-derived, and other third-party material"
     }
   ],
@@ -49,7 +49,7 @@
       "relative_path": "musl",
       "path": "components/c2go-libc/musl",
       "revision": "a31facd31f63ac569a39f8796b7e5c1494892f1e",
-      "tag": "v0.20260801.0-rc.1",
+      "tag": null,
       "license": "musl MIT terms and file-specific notices"
     }
   ]

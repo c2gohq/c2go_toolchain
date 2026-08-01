@@ -14,9 +14,9 @@
 
 > **PRE-RELEASE COORDINATION REPOSITORY — NOT READY FOR PRODUCTION USE**
 >
-> This repository pins the current coordinated release candidate,
-> `v0.20260801.0-rc.1`, as Git submodules. It is an unsigned evaluation release,
-> not a production-ready toolchain.
+> The `main` branch pins the current development snapshot after
+> `v0.20260801.0-rc.1`, which remains the latest coordinated public candidate.
+> Both are for unsigned evaluation, not production use.
 
 ## What this repository is
 
@@ -64,8 +64,9 @@ The repository is deliberately fail-closed:
 
 - `.gitmodules` records the three public component remotes, and the gitlinks are
   pinned to commits that are reachable from those remotes;
-- [toolchain.lock.json](toolchain.lock.json) records those exact revisions, the
-  coordinated RC tag, and immutable release metadata;
+- [toolchain.lock.json](toolchain.lock.json) records the exact development
+  snapshot revisions; coordinated tags and immutable release metadata are
+  filled only when a release candidate is cut;
 - the default release verifier fails unless release metadata, remote tags,
   component revisions, recursive dependencies, and clean worktrees all agree;
   and
