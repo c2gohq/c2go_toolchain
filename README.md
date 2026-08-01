@@ -15,7 +15,7 @@
 > **PRE-RELEASE COORDINATION REPOSITORY — NOT READY FOR PRODUCTION USE**
 >
 > This repository pins the current coordinated release candidate,
-> `v0.20260729.0-rc.5`, as Git submodules. It is an unsigned evaluation release,
+> `v0.20260801.0-rc.1`, as Git submodules. It is an unsigned evaluation release,
 > not a production-ready toolchain.
 
 ## What this repository is
@@ -121,7 +121,7 @@ vMAJOR.YYYYMMDD.REVISION[-rc.N]
 same date. Release candidates append `-rc.N`; exact dependency revisions remain
 in `toolchain.lock.json`.
 
-The current public candidate is `v0.20260729.0-rc.5`, not a stable release. It is
+The current public candidate is `v0.20260801.0-rc.1`, not a stable release. It is
 intended for evaluation, reproducibility checks, and compatibility testing.
 
 See [RELEASING.md](RELEASING.md) for the initialization and release sequence.

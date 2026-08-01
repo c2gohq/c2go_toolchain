@@ -319,7 +319,6 @@ def verify_pipeline(
         run(
             [
                 str(c2go_bind),
-                "--pkg=example.com/c2go/sdkcheck/translated",
                 f"--out={generated}",
                 f"--sidecar={manifest}",
                 str(assembly),

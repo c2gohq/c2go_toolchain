@@ -89,7 +89,6 @@ c2go-clang --target="$C2GO_TARGET" \
 
 mkdir -p translated
 c2go-bind \
-  --pkg=example.com/demo/translated \
   --out=translated \
   --sidecar=translated.json \
   translated.s
