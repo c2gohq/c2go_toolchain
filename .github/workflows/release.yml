@@ -9,7 +9,7 @@ on:
       version:
         description: CalVer version used for an unsigned dry-run package build
         required: true
-        default: v0.20260802.0-rc.1
+        default: v0.20260804.0-rc.1
         type: string
 
 permissions:
@@ -78,9 +78,61 @@ jobs:
           fi
           python3 scripts/verify-release.py
 
+  go_contract:
+    name: Validate Go 1.26 contract (${{ matrix.target }})
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: linux-amd64
+            runner: ubuntu-22.04
+          - target: linux-arm64
+            runner: ubuntu-22.04-arm
+          - target: windows-amd64
+            runner: windows-2022
+          - target: macos-arm64
+            runner: macos-14
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - name: Check out the pinned toolchain
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up latest Go 1.26
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: 1.26.x
+          cache: false
+
+      - name: Test c2go-bind and its Go-contract probe
+        shell: bash
+        working-directory: components/c2go-bind
+        run: |
+          set -euo pipefail
+          go version
+          go test -count=1 ./...
+
+      - name: Test the Go toolchain contract provider and generated runtime
+        shell: bash
+        working-directory: components/c2go-libc
+        env:
+          GOGC: "1"
+          GODEBUG: invalidptr=1
+        run: |
+          set -euo pipefail
+          go version
+          go test -count=1 ./...
+
   build:
     name: Build ${{ matrix.target }}
-    needs: prepare
+    needs:
+      - prepare
+      - go_contract
     strategy:
       fail-fast: false
       matrix:
@@ -251,13 +303,39 @@ jobs:
             --c2go-bind build/c2go-bind.exe `
             --output-dir dist
 
-      - name: Verify installed SDK archive end to end
+      - name: Verify installed SDK archive end to end with Go 1.25
         shell: bash
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
           TARGET: ${{ matrix.target }}
         run: |
           set -euo pipefail
+          suffix=.tar.gz
+          if [[ "${TARGET}" == windows-* ]]; then
+            suffix=.zip
+          fi
+          python3 scripts/verify-package.py \
+            --version "${VERSION}" \
+            --target "${TARGET}" \
+            --archive "dist/c2go-toolchain-${VERSION}-${TARGET}${suffix}" \
+            --libc-source components/c2go-libc
+
+      - name: Set up latest Go 1.26 for installed SDK verification
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: 1.26.x
+          cache: false
+
+      - name: Verify installed SDK archive end to end with Go 1.26
+        shell: bash
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          TARGET: ${{ matrix.target }}
+          GOGC: "1"
+          GODEBUG: invalidptr=1
+        run: |
+          set -euo pipefail
+          go version
           suffix=.tar.gz
           if [[ "${TARGET}" == windows-* ]]; then
             suffix=.zip

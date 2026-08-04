@@ -27,7 +27,8 @@ SDK 可以整体移动，但 `bin/`、`include/` 和 `lib/` 必须位于同一�
 
 ## 环境要求
 
-- Go 1.25.x；Go 1.26 及更高版本不在本次发布的 ABI 窗口内。
+- Go 1.25.x 或 Go 1.26.x；Go 1.27 及以后版本在中央 toolchain contract
+  provider 完成验证前会被拒绝。
 - 与宿主 OS/架构匹配的平台压缩包。
 - Go module 必须将 `github.com/c2gohq/c2go_libc` 固定到同一个协同版本
   `@C2GO_VERSION@`。

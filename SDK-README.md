@@ -30,7 +30,8 @@ resource directory automatically; do not add a host libc include directory.
 
 ## Requirements
 
-- Go 1.25.x (Go 1.26 and later are outside this release's ABI window).
+- Go 1.25.x or Go 1.26.x. Go 1.27 and later are rejected until the centralized
+  toolchain-contract provider validates them.
 - The archive matching the host OS and architecture.
 - A Go module that pins `github.com/c2gohq/c2go_libc` to the same coordinated
   version, `@C2GO_VERSION@`.

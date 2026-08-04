@@ -15,7 +15,7 @@
 > **预发布协调仓库——尚不能用于生产环境**
 >
 > 本仓库已通过 Git submodule 固定当前协同候选版本
-> `v0.20260802.0-rc.1`。这是未签名的评估版本，尚不能作为生产工具链使用。
+> `v0.20260804.0-rc.1`。这是未签名的评估版本，尚不能作为生产工具链使用。
 
 ## 本仓库的职责
 
@@ -64,8 +64,9 @@ Go 可执行文件或库
   和不可变 release 元数据；
 - release 元数据、远端 tag、组件 revision、递归依赖或干净工作树不一致时，正式
   release 校验必须失败；
-- 候选版本的兼容范围为 Go 1.25.x 和 C2Go ABI epoch 1，并已由四目标原生 release
-  dry run 覆盖。
+- 候选版本的兼容范围为 Go 1.25.x 至 Go 1.26.x、C2Go ABI epoch 1 和 Go
+  toolchain contract epoch 1。打包前，release workflow 会在四个目标的原生
+  runner 上运行 Go 1.26 provider 与生成 runtime 测试。
 
 只检查仓库骨架结构：
 
@@ -113,7 +114,7 @@ UTC 下建立协同 release 版本线的日期；`REVISION` 从 `0` 开始，同
 维护版本时递增。候选版本追加 `-rc.N`；精确依赖 revision 仍记录在
 `toolchain.lock.json` 中。
 
-当前公开候选版本是 `v0.20260802.0-rc.1`，不是稳定版本；它用于评估、可复现性
+当前公开候选版本是 `v0.20260804.0-rc.1`，不是稳定版本；它用于评估、可复现性
 检查和兼容性测试。
 
 初始化 submodule 和发布的完整顺序见

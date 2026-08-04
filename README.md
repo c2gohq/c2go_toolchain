@@ -15,7 +15,7 @@
 > **PRE-RELEASE COORDINATION REPOSITORY — NOT READY FOR PRODUCTION USE**
 >
 > This repository pins the current coordinated release candidate,
-> `v0.20260802.0-rc.1`, as Git submodules. It is an unsigned evaluation release,
+> `v0.20260804.0-rc.1`, as Git submodules. It is an unsigned evaluation release,
 > not a production-ready toolchain.
 
 ## What this repository is
@@ -69,8 +69,10 @@ The repository is deliberately fail-closed:
 - the default release verifier fails unless release metadata, remote tags,
   component revisions, recursive dependencies, and clean worktrees all agree;
   and
-- the candidate compatibility window is Go 1.25.x and C2Go ABI epoch 1, covered
-  by the native four-target release dry run.
+- the candidate compatibility window is Go 1.25.x through Go 1.26.x, C2Go ABI
+  epoch 1, and Go toolchain contract epoch 1. Before packaging, the release
+  workflow runs the Go 1.26 provider and generated runtime tests on all four
+  native target runners.
 
 Validate only the scaffold structure with:
 
@@ -121,7 +123,7 @@ vMAJOR.YYYYMMDD.REVISION[-rc.N]
 same date. Release candidates append `-rc.N`; exact dependency revisions remain
 in `toolchain.lock.json`.
 
-The current public candidate is `v0.20260802.0-rc.1`, not a stable release. It is
+The current public candidate is `v0.20260804.0-rc.1`, not a stable release. It is
 intended for evaluation, reproducibility checks, and compatibility testing.
 
 See [RELEASING.md](RELEASING.md) for the initialization and release sequence.
