@@ -9,7 +9,7 @@ on:
       version:
         description: CalVer version used for an unsigned dry-run package build
         required: true
-        default: v0.20260804.0-rc.1
+        default: v0.20260809.0-rc.1
         type: string
 
 permissions:
@@ -268,6 +268,21 @@ jobs:
           if ($actual -ne "c2go-bind $env:VERSION") {
             throw "unexpected c2go-bind version: $actual"
           }
+
+      - name: Verify committed libc and mlib generation
+        if: matrix.target == 'linux-amd64'
+        shell: bash
+        working-directory: components/c2go-libc
+        env:
+          CLANG: ${{ github.workspace }}/build/c2go-clang/bin/clang
+          C2GOLTO: ${{ github.workspace }}/build/c2go-clang/bin/c2go-lto
+          C2GOBIND: ${{ github.workspace }}/build/c2go-bind
+        run: |
+          set -euo pipefail
+          ./gen.sh
+          ./mlib/gen.sh
+          git diff --exit-code -- .
+          test -z "$(git status --porcelain --untracked-files=all)"
 
       - name: Test the matched c2go-libc runtime
         shell: bash
