@@ -9,7 +9,7 @@ on:
       version:
         description: CalVer version used for an unsigned dry-run package build
         required: true
-        default: v0.20260809.0-rc.3
+        default: v0.20260809.0-rc.4
         type: string
 
 permissions:
