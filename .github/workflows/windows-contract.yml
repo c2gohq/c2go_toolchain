@@ -15,9 +15,23 @@ permissions:
 
 jobs:
   windows_contract:
-    name: Validate generated runtime on Windows AMD64
+    name: Validate ${{ matrix.name }} on Windows AMD64
     runs-on: windows-2022
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: root libc
+            package: .
+          - name: dl
+            package: ./dl
+          - name: mlib
+            package: ./mlib
+          - name: namespaced mlib selftest
+            package: ./mlib/selftest/namespaced
+          - name: unprefixed mlib selftest
+            package: ./mlib/selftest/unprefixed
     steps:
       - name: Check out the pinned toolchain
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -41,7 +55,7 @@ jobs:
         run: |
           set -uo pipefail
           go version
-          go test -json -count=1 ./... | tee windows-go-test.json
+          go test -json -count=1 "${{ matrix.package }}" | tee windows-go-test.json
           status="${PIPESTATUS[0]}"
           if [[ "${status}" -ne 0 ]]; then
             found=false
