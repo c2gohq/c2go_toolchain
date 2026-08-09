@@ -1,0 +1,56 @@
+name: Validate Windows Go contract
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/windows-contract.yml
+      - components/c2go-libc
+      - toolchain.lock.json
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows_contract:
+    name: Validate generated runtime on Windows AMD64
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - name: Check out the pinned toolchain
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 1
+          submodules: recursive
+          persist-credentials: false
+
+      - name: Set up latest Go 1.26
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
+        with:
+          go-version: 1.26.x
+          cache: false
+
+      - name: Test the provider and generated runtime
+        shell: bash
+        working-directory: components/c2go-libc
+        env:
+          GOGC: "1"
+          GODEBUG: invalidptr=1
+        run: |
+          set -uo pipefail
+          go version
+          go test -json -count=1 ./... | tee windows-go-test.json
+          status="${PIPESTATUS[0]}"
+          if [[ "${status}" -ne 0 ]]; then
+            found=false
+            while IFS= read -r failure; do
+              found=true
+              printf '::error title=Windows Go test failure::%s\n' "${failure}"
+            done < <(grep -E '"Action":"fail"' windows-go-test.json || true)
+            if [[ "${found}" != "true" ]]; then
+              printf '::error title=Windows Go test failure::go test exited with status %s before reporting a failing test or package\n' "${status}"
+            fi
+            exit "${status}"
+          fi

@@ -124,9 +124,21 @@ jobs:
           GOGC: "1"
           GODEBUG: invalidptr=1
         run: |
-          set -euo pipefail
+          set -uo pipefail
           go version
-          go test -count=1 ./...
+          go test -json -count=1 ./... | tee go-contract-test.json
+          status="${PIPESTATUS[0]}"
+          if [[ "${status}" -ne 0 ]]; then
+            found=false
+            while IFS= read -r failure; do
+              found=true
+              printf '::error title=Go contract test failure::%s\n' "${failure}"
+            done < <(grep -E '"Action":"fail"' go-contract-test.json || true)
+            if [[ "${found}" != "true" ]]; then
+              printf '::error title=Go contract test failure::go test exited with status %s before reporting a failing test or package\n' "${status}"
+            fi
+            exit "${status}"
+          fi
 
   build:
     name: Build ${{ matrix.target }}
