@@ -24,14 +24,31 @@ jobs:
         include:
           - name: root libc
             package: .
+            tests: .
           - name: dl
             package: ./dl
+            tests: .
           - name: mlib
             package: ./mlib
-          - name: namespaced mlib selftest
+            tests: .
+          - name: namespaced allocation and paths
             package: ./mlib/selftest/namespaced
+            tests: ^(TestManagedAsprintf|TestManagedGetcwd|TestManagedRealpath|TestManagedStringPrefixed)$
+          - name: namespaced directories and glob
+            package: ./mlib/selftest/namespaced
+            tests: ^(TestDirentHeader|TestManagedDirentRetirement|TestManagedGlobHeader)$
+          - name: namespaced synchronization
+            package: ./mlib/selftest/namespaced
+            tests: ^(TestPthreadHeader|TestSemaphoreHeader|TestManagedSyncRetirement)$
+          - name: namespaced stdio and process streams
+            package: ./mlib/selftest/namespaced
+            tests: ^(TestManagedPopen|TestManagedStdioHeader|TestManagedStandardStreams|TestManagedStandardStreamRetirement)$
+          - name: namespaced regex and search
+            package: ./mlib/selftest/namespaced
+            tests: ^(TestManagedRegexPrefixed|TestManagedSearchHeader)$
           - name: unprefixed mlib selftest
             package: ./mlib/selftest/unprefixed
+            tests: .
     steps:
       - name: Check out the pinned toolchain
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -55,7 +72,7 @@ jobs:
         run: |
           set -uo pipefail
           go version
-          go test -json -count=1 "${{ matrix.package }}" | tee windows-go-test.json
+          go test -json -count=1 -run '${{ matrix.tests }}' "${{ matrix.package }}" | tee windows-go-test.json
           status="${PIPESTATUS[0]}"
           if [[ "${status}" -ne 0 ]]; then
             found=false
