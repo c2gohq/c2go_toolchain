@@ -34,9 +34,15 @@ jobs:
           - name: namespaced allocation and paths
             package: ./mlib/selftest/namespaced
             tests: ^(TestManagedAsprintf|TestManagedGetcwd|TestManagedRealpath|TestManagedStringPrefixed)$
-          - name: namespaced directories and glob
+          - name: namespaced dirent header
             package: ./mlib/selftest/namespaced
-            tests: ^(TestDirentHeader|TestManagedDirentRetirement|TestManagedGlobHeader)$
+            tests: ^TestDirentHeader$
+          - name: namespaced dirent retirement
+            package: ./mlib/selftest/namespaced
+            tests: ^TestManagedDirentRetirement$
+          - name: namespaced glob
+            package: ./mlib/selftest/namespaced
+            tests: ^TestManagedGlobHeader$
           - name: namespaced synchronization
             package: ./mlib/selftest/namespaced
             tests: ^(TestPthreadHeader|TestSemaphoreHeader|TestManagedSyncRetirement)$
