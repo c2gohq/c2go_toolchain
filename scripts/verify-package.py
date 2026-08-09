@@ -28,6 +28,7 @@ TARGETS = {
 }
 
 WINDOWS_UNAVAILABLE_HEADERS = {
+    "c2go/mlib/ftw.h",
     "ftw.h",
     "sys/ioctl.h",
     "sys/resource.h",

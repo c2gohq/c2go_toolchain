@@ -9,7 +9,7 @@ on:
       version:
         description: CalVer version used for an unsigned dry-run package build
         required: true
-        default: v0.20260809.0-rc.4
+        default: v0.20260809.0-rc.5
         type: string
 
 permissions:
@@ -34,6 +34,9 @@ jobs:
           fetch-depth: 1
           submodules: recursive
           persist-credentials: false
+
+      - name: Test release tooling
+        run: python3 -m unittest discover -s scripts -p 'test_*.py'
 
       - name: Resolve release context
         id: release
